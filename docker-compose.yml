@@ -1,0 +1,77 @@
+version: "2.3"
+services:
+  local_debug:
+    build: ..
+    volumes:
+      - ./:/recipes
+      - ../work:/work
+      - ../work/data:/work/data
+      - ../mlutils:/src/mlutils
+      - ../nnfabrik:/src/nnfabrik
+      - ../nnvision:/src/nnvision
+      - ../bias_transfer:/src/bias_transfer
+      - /tmp/djcache:/cache
+    env_file: .env
+    working_dir: /recipes/
+    entrypoint: ""
+  local_develop:
+    build: ..
+    volumes:
+      - ./:/recipes
+      - ../work:/work
+      - ../work/data:/work/data
+      - ../mlutils:/src/mlutils
+      - ../nnfabrik:/src/nnfabrik
+      - ../nnvision:/src/nnvision
+      - ../bias_transfer:/src/bias_transfer
+      - /tmp/djcache:/cache
+    ports:
+    working_dir: /recipes/
+      - "8888:8888"
+    env_file: .env
+  server_develop:
+    build: ..
+    volumes:
+      - ./:/recipes
+      - ../work:/work
+      - ../work/data:/work/data
+      - ../mlutils:/src/mlutils
+      - ../nnfabrik:/src/nnfabrik
+      - ../nnvision:/src/nnvision
+      - ../bias_transfer:/src/bias_transfer
+      - /tmp/djcache:/cache
+    working_dir: /recipes/
+    env_file: .env
+    runtime: nvidia
+  server_job:
+    build: ..
+    volumes:
+      - ./:/recipes
+      - ../work:/work
+      - ../work/data:/work/data
+      - ../mlutils:/src/mlutils
+      - ../nnfabrik:/src/nnfabrik
+      - ../nnvision:/src/nnvision
+      - ../bias_transfer:/src/bias_transfer
+      - /tmp/djcache:/cache
+    env_file: .env
+    runtime: nvidia
+    entrypoint: python3
+    working_dir: /recipes/
+    command: main.py
+  server_custom_job:
+    build: ..
+    volumes:
+      - ./:/recipes
+      - ../work:/work
+      - ../work/data:/work/data
+      - ../mlutils:/src/mlutils
+      - ../nnfabrik:/src/nnfabrik
+      - ../nnvision:/src/nnvision
+      - ../bias_transfer:/src/bias_transfer
+      - /tmp/djcache:/cache
+    env_file: .env
+    runtime: nvidia
+    entrypoint: ""
+    working_dir: /recipes/
+
