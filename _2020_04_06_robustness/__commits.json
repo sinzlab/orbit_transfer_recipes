@@ -1,0 +1,9 @@
+{
+  "default": {
+     ..
+    "bias_transfer": "1b3d1b381fe1d7fe0500f70c314665e3570a801a",
+    "nnfabrik": "6c055eb04b14f85ab972d0597fdbafbd7066d704",
+    "nnvision": "69d02beea2f56470f7f19243527f77745ab4d5d9",
+    "mlutils": "7e6df135a76fbe08f762c6256c566e915848808f"
+  }
+}
