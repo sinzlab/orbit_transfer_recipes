@@ -25,8 +25,8 @@ services:
       - ../nnvision:/src/nnvision
       - ../bias_transfer:/src/bias_transfer
       - /tmp/djcache:/cache
-    ports:
     working_dir: /recipes/
+    ports:
       - "8888:8888"
     env_file: .env
   server_develop:

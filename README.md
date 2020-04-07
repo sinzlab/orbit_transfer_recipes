@@ -105,6 +105,7 @@ RUN apt-get update && apt-get install -y \
 RUN jupyter labextension install jupyterlab_vim
 RUN pip install checkout_code
 RUN pip install requests
+RUN pip install imageio
 
 RUN mkdir -p /recipes
 RUN mkdir -p /work
@@ -140,11 +141,11 @@ AFFILIATION=sinzlab
 In general, to run any experiment, it is recommended to run it via the commandline interface that is provided by `main.py`.
 For this purpose, simply execute the `server_job` service with `docker-compose`:
 ```
-$ docker-compose run --name <user>_prod_GPU<gpu_index> -d -e NVIDIA_VISIBLE_DEVICES=<gpu_index> server_job  --recipe <recipe> --experiment <experiment> --schema <schema>
+$ docker-compose run --name <user>_prod_GPU<gpu_index> -d -e NVIDIA_VISIBLE_DEVICES=<gpu_index> server_job main.py --recipe <recipe> --experiment <experiment> --schema <schema>
 ```
 Running the example experiment from this repository would look something like this:
 ```
-$ docker-compose run --name anix_prod_GPU1 -d -e NVIDIA_VISIBLE_DEVICES=1 server_job  --recipe _2020_04_05_example --experiment baseline --schema anix_nnfabrik_example_schema
+$ docker-compose run --name anix_prod_GPU1 -d -e NVIDIA_VISIBLE_DEVICES=1 server_job main.py  --recipe _2020_04_05_example --experiment baseline --schema anix_nnfabrik_example_schema
 ```
 Alternatively, it is also possible to start the jupyter interface (see below) and attach an interactive shell to start the experiment manually:
 ```

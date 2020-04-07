@@ -52,41 +52,17 @@ def run_all_experiments(configs):
     run_experiments(configs, TrainedTransferModel2(), level=2)
 
 
-def analyse(experiment, experiment_key):
-    dataset_cls = "CIFAR10"
-    if experiment_key == "clean":
-        exp = experiment.configs[Description(name=dataset_cls + ": Clean", seed=42)]
-    if experiment_key == "noisy":
-        exp = experiment.configs[Description(name=dataset_cls + ": Noise Augmented", seed=42)]
-    if experiment_key == "rep_matching":
-        exp = experiment.configs[Description(name=dataset_cls + ": Noise Augmented + Repr. Matching", seed=42)]
-    if experiment_key == "adv_regression":
-        exp = experiment.configs[Description(name=dataset_cls + ": Noise Augmented + Noise Adv Regession", seed=42)]
+def analyse(experiment, analysis_method, dataset="val"):
+    from bias_transfer.tables.trained_model import TrainedModel
+    from bias_transfer.analysis.representation_analysis import RepresentationAnalyser
+    os.chdir("/work/")
 
-    # val_analyser = RepresentationAnalyser(experiment=exp, table=TrainedModel(), dataset="val",
-    #                                       plot_style="lightpaper")
-    # clean_indices = val_analyser.corr_matrix(mode="clean")
-    # for i in range(1, 21):
-    #     noise_level = 0.05 * i
-    #     val_analyser.corr_matrix(mode="noisy", noise_level=noise_level)
-    #     val_analyser.corr_matrix(mode="noisy", noise_level=noise_level, sorted_indices=clean_indices)
-    #
-    # del val_analyser
-    train_analyser = RepresentationAnalyser(experiment=exp, table=TrainedModel(), dataset="train",
-                                            plot_style="lightpaper")
-    pca_clean = train_analyser.dim_reduction(noise_level=0.0, method="pca", mode="clean")
-    for i in range(1, 11):
-        noise_level = 0.05 * i
-        train_analyser = RepresentationAnalyser(experiment=exp, table=TrainedModel(), dataset="train",
-                                                plot_style="lightpaper")
-        # train_analyser.dim_reduction(noise_level=noise_level, method="pca", mode="noisy")
-        train_analyser.dim_reduction(noise_level=noise_level, method="pca", mode="noisy", pca=pca_clean)
-    # train_analyser.dim_reduction(noise_level=0.0, method="tsne", mode="clean")
-    # for i in range(1, 11):
-    #     noise_level = 0.05 * i
-    #     train_analyser = RepresentationAnalyser(experiment=exp, table=TrainedModel(), dataset="train",
-    #                                             plot_style="lightpaper")
-    #     train_analyser.dim_reduction(noise_level=noise_level, method="tsne", mode="noisy")
+    for exp in experiment.experiments.values():
+        analyser = RepresentationAnalyser(experiment=exp,
+                                          table=TrainedModel(),
+                                          dataset=dataset,
+                                          plot_style="lightpaper")
+        analyser.run(analysis_method)
 
 
 def main(experiment):
@@ -122,8 +98,8 @@ def load_experiment(recipe, experiment, schema=None, base_dir="./", import_prefi
     else:
         with open(os.path.join(base_dir, recipe, "__commits.json"), "r") as read_file:
             commits_dict = json.load(read_file)
-        experiment_commits = commits_dict.get(experiment)
-        default_commits = commits_dict.get("default")
+        experiment_commits = commits_dict.get(experiment, {})
+        default_commits = commits_dict.get("default", {})
         for repo in ("bias_transfer", "mlutils", "nnfabrik", "nnvision"):
             commit_hash = experiment_commits.get(repo, default_commits.get(repo))
             if not commit_hash:
@@ -136,7 +112,7 @@ def load_experiment(recipe, experiment, schema=None, base_dir="./", import_prefi
     dj.config['database.user'] = os.environ['DJ_USER']
     dj.config['database.password'] = os.environ['DJ_PASS']
     dj.config['enable_python_native_blobs'] = True
-    dj.config['schema_name'] = schema if schema else "anix_nnfabrik" + recipe
+    dj.config['schema_name'] = schema if schema else os.environ["DJ_USER"] + "_nnfabrik" + recipe
 
     try:
         from bias_transfer.configs.base import Description
@@ -149,22 +125,22 @@ def load_experiment(recipe, experiment, schema=None, base_dir="./", import_prefi
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Running pre-defined recipes or analysis')
-    parser.add_argument('--analysis', dest='analysis', action='store', default="", type=str,
-                        help='name of experiment to analyse')
     parser.add_argument('--recipe', dest='recipe', action='store', default="", type=str,
                         help='set of recipes to run/analyse (set of experiments to execute)')
     parser.add_argument('--schema', dest='schema', action='store', default="", type=str,
                         help='schema in which to store recipes and results')
     parser.add_argument('--experiment', dest='experiment', action='store', default="", type=str,
-                        help='name of experiment to run/analyse (specific experiment)')  # TODO find fitting name
+                        help='name of experiment to run/analyse (specific experiment)')
+    parser.add_argument('--analysis', dest='analysis', action='store', default="", type=str,
+                        help='analysis method to execute')
+    parser.add_argument('--dataset', dest='dataset', action='store', default="val", type=str,
+                        help='dataset to perform analysis on')
 
     args = parser.parse_args()
 
     experiment = load_experiment(args.recipe, args.experiment, args.schema)
 
-    from bias_transfer.analysis.representation_analysis import RepresentationAnalyser
-
     if args.analysis:
-        analyse(experiment, args.analysis)
+        analyse(experiment, args.analysis, dataset=args.dataset)
     else:
         main(experiment)

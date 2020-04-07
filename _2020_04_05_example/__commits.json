@@ -1,14 +1,14 @@
 {
   "default": {
-    "bias_transfer": "",
-    "nnfabrik": "",
-    "nnvision": "",
-    "mlutils": ""
+    "bias_transfer": "f3d6ec155b942b49b8e64c8ac1d68a43af3db4ea",
+    "nnfabrik": "6c055eb04b14f85ab972d0597fdbafbd7066d704",
+    "nnvision": "69d02beea2f56470f7f19243527f77745ab4d5d9",
+    "mlutils": "7e6df135a76fbe08f762c6256c566e915848808f"
   },
   "baseline": {
-    "bias_transfer": "HEAD",
-    "nnfabrik": "a63ba9c5a3ad1fa18a80f67a124f0af3b5e053d3",
+    "bias_transfer": "f3d6ec155b942b49b8e64c8ac1d68a43af3db4ea",
+    "nnfabrik": "6c055eb04b14f85ab972d0597fdbafbd7066d704",
     "nnvision": "69d02beea2f56470f7f19243527f77745ab4d5d9",
-    "mlutils": "3b0958aa7d95b4978c801694a361be67c1049f06"
+    "mlutils": "7e6df135a76fbe08f762c6256c566e915848808f"
   }
 }
