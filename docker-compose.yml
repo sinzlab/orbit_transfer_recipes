@@ -6,10 +6,14 @@ services:
       - ./:/recipes
       - ../work:/work
       - ../work/data:/work/data
-      - ../mlutils:/src/mlutils
+      - ../ml-utils:/src/ml-utils
       - ../nnfabrik:/src/nnfabrik
       - ../nnvision:/src/nnvision
       - ../bias_transfer:/src/bias_transfer
+      - ../pytorch_warmup:/src/pytorch_warmup
+      - ../nndichromacy:/src/nndichromacy
+      - ../data_port:/src/data_port
+      - ../mei:/src/mei
       - /tmp/djcache:/cache
     env_file: .env
     working_dir: /recipes/
@@ -20,58 +24,149 @@ services:
       - ./:/recipes
       - ../work:/work
       - ../work/data:/work/data
-      - ../mlutils:/src/mlutils
+      - ../ml-utils:/src/ml-utils
       - ../nnfabrik:/src/nnfabrik
       - ../nnvision:/src/nnvision
       - ../bias_transfer:/src/bias_transfer
+      - ../pytorch_warmup:/src/pytorch_warmup
+      - ../nndichromacy:/src/nndichromacy
+      - ../data_port:/src/data_port
+      - ../mei:/src/mei
       - /tmp/djcache:/cache
     working_dir: /recipes/
     ports:
       - "8888:8888"
     env_file: .env
+  tpu_develop:
+    build: ..
+    volumes:
+      - ./:/recipes
+      - ../work:/work
+      - ../work/data:/work/data
+      - ../ml-utils:/src/ml-utils
+      - ../nnfabrik:/src/nnfabrik
+      - ../nnvision:/src/nnvision
+      - ../bias_transfer:/src/bias_transfer
+      - ../pytorch_warmup:/src/pytorch_warmup
+      - ../nndichromacy:/src/nndichromacy
+      - ../data_port:/src/data_port
+      - ../mei:/src/mei
+      - /tmp/djcache:/cache
+    working_dir: /recipes/
+    env_file: .env
+    environment:
+      - TPU_IP_ADDRESS
+    ipc: host
+    shm_size: 16g
+  tpu_job:
+    build:
+      context: ..
+      dockerfile: TPUDockerfile
+    volumes:
+      - ./:/recipes
+      - ../work:/work
+      - ../work/data:/work/data
+      - ../ml-utils:/src/ml-utils
+      - ../nnfabrik:/src/nnfabrik
+      - ../nnvision:/src/nnvision
+      - ../bias_transfer:/src/bias_transfer
+      - ../pytorch_warmup:/src/pytorch_warmup
+      - ../nndichromacy:/src/nndichromacy
+      - ../data_port:/src/data_port
+      - ../mei:/src/mei
+      - /tmp/djcache:/cache
+    env_file: .env
+    environment:
+      - TPU_IP_ADDRESS
+    entrypoint: ""
+    working_dir: /recipes/
+    command: main.py
+    ipc: host
+    shm_size: 16g
   server_develop:
     build: ..
     volumes:
       - ./:/recipes
       - ../work:/work
       - ../work/data:/work/data
-      - ../mlutils:/src/mlutils
+      - ../ml-utils:/src/ml-utils
       - ../nnfabrik:/src/nnfabrik
       - ../nnvision:/src/nnvision
       - ../bias_transfer:/src/bias_transfer
+      - ../pytorch_warmup:/src/pytorch_warmup
+      - ../nndichromacy:/src/nndichromacy
+      - ../data_port:/src/data_port
+      - ../mei:/src/mei
       - /tmp/djcache:/cache
     working_dir: /recipes/
     env_file: .env
     runtime: nvidia
-  server_job:
+    ipc: host
+    shm_size: 40g
+  server_analysis:
     build: ..
     volumes:
       - ./:/recipes
       - ../work:/work
       - ../work/data:/work/data
-      - ../mlutils:/src/mlutils
+      - ../ml-utils:/src/ml-utils
       - ../nnfabrik:/src/nnfabrik
       - ../nnvision:/src/nnvision
       - ../bias_transfer:/src/bias_transfer
+      - ../pytorch_warmup:/src/pytorch_warmup
+      - ../nndichromacy:/src/nndichromacy
+      - ../data_port:/src/data_port
+      - ../mei:/src/mei
       - /tmp/djcache:/cache
     env_file: .env
     runtime: nvidia
     entrypoint: python3
     working_dir: /recipes/
     command: main.py
-  server_custom_job:
+    ipc: host
+    shm_size: 40g
+  server_job:
     build: ..
     volumes:
       - ./:/recipes
       - ../work:/work
       - ../work/data:/work/data
-      - ../mlutils:/src/mlutils
+      - ../ml-utils:/src/ml-utils
       - ../nnfabrik:/src/nnfabrik
       - ../nnvision:/src/nnvision
       - ../bias_transfer:/src/bias_transfer
+      - ../pytorch_warmup:/src/pytorch_warmup
+      - ../nndichromacy:/src/nndichromacy
+      - ../data_port:/src/data_port
+      - ../mei:/src/mei
+      - /tmp/djcache:/cache
+    env_file: .env
+    runtime: nvidia
+    entrypoint: python3
+    working_dir: /recipes/
+    command: main.py
+    ipc: host
+    shm_size: 40g
+  server_run_tests:
+    build: ..
+    volumes:
+      - ./:/recipes
+      - ../work:/work
+      - ../work/data:/work/data
+      - ../ml-utils:/src/ml-utils
+      - ../nnfabrik:/src/nnfabrik
+      - ../nnvision:/src/nnvision
+      - ../bias_transfer:/src/bias_transfer
+      - ../nndichromacy:/src/nndichromacy
+      - ../data_port:/src/data_port
+      - ../mei:/src/mei
       - /tmp/djcache:/cache
     env_file: .env
     runtime: nvidia
     entrypoint: ""
-    working_dir: /recipes/
+    working_dir: /src/bias_transfer/bias_transfer
+    command: ./run_tests.sh
+    ipc: host
+    shm_size: 40g
+
 
