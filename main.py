@@ -30,13 +30,29 @@ def fill_tables(configs: dict):
 
 def run_experiments(configs, train_table, order="random", level=0):
     from datajoint.errors import LostConnectionError
+    from bias_transfer.tables.transfer import TransferredTrainedModel
+    from bias_transfer.tables.nnfabrik import TrainedModelTransferRecipe
+    from bias_transfer.configs.trainer import TransferTrainerConfig
 
     os.chdir("/work/")
     restrictions = []
     for config in configs.values():
-        restr = config.get_restrictions()
-        if len(restr) > level:
-            restrictions.append(restr[level])
+        restr = config.get_restrictions(level)
+        if restr:
+            restrictions.append(restr)
+            if level > 0:  # add recipe
+                transfer_from = config.configs[level - 1].get_restrictions()[0]
+                transfer_from["collapsed_history"] = restr["collapsed_history"]
+                transfer_to = config.configs[level].get_restrictions()[0]
+                TrainedModelTransferRecipe().add_entry(
+                    transfer_from=transfer_from,
+                    transfer_to=transfer_to,
+                    transfer_step=level,
+                    data_transfer=isinstance(config.configs[level].trainer, TransferTrainerConfig),
+                )
+                TransferredTrainedModel.transfer_recipe = [TrainedModelTransferRecipe()]
+    if not restrictions:
+        return False  # we've run all transfer steps
     try:
         train_table.populate(
             restrictions, display_progress=True, reserve_jobs=True, order=order
@@ -45,21 +61,15 @@ def run_experiments(configs, train_table, order="random", level=0):
         raise LostConnectionError(
             "Connection to database lost at {}".format(datetime.now())
         )
+    return True
 
 
 def run_all_experiments(configs):
-    from bias_transfer.tables.trained_model import TrainedModel, CollapsedTrainedModel
-    from bias_transfer.tables.trained_transfer_model import (
-        TrainedTransferModel,
-        CollapsedTrainedTransferModel,
-        TrainedTransferModel2,
-    )
+    from bias_transfer.tables.transfer import TransferredTrainedModel
 
-    run_experiments(configs, TrainedModel(), level=0)
-    CollapsedTrainedModel().populate()
-    run_experiments(configs, TrainedTransferModel(), level=1)
-    CollapsedTrainedTransferModel().populate()
-    run_experiments(configs, TrainedTransferModel2(), level=2)
+    level = 0
+    while run_experiments(configs, TransferredTrainedModel(), level=level):
+        level += 1
 
 
 def analyse(experiment, analysis_method, dataset="validation"):
@@ -169,9 +179,18 @@ def load_experiment(
     dj.config["database.user"] = os.environ["DJ_USER"]
     dj.config["database.password"] = os.environ["DJ_PASS"]
     dj.config["enable_python_native_blobs"] = True
-    dj.config["schema_name"] = (
-        schema if schema else os.environ["DJ_USER"] + "_nnfabrik" + recipe
-    )
+    if not "stores" in dj.config:
+        dj.config["stores"] = {}
+    dj.config["stores"]["minio"] = {  # store in s3
+        "protocol": "s3",
+        "endpoint": os.environ.get("MINIO_ENDPOINT", "DUMMY_ENDPOINT"),
+        "bucket": "nnfabrik",
+        "location": "dj-store",
+        "access_key": os.environ.get("MINIO_ACCESS_KEY", "FAKEKEY"),
+        "secret_key": os.environ.get("MINIO_SECRET_KEY", "FAKEKEY"),
+    }
+    dj.config["custom"] = {}
+    dj.config["custom"]["nnfabrik.my_schema_name"] = schema if schema else f"bias_transfer_{recipe}"
 
     try:
         from bias_transfer.configs.base import Description
