@@ -87,7 +87,7 @@ services:
     build: ..
     volumes:
       - ./:/recipes
-      - ../work:/work
+      - ../:/misc
       - ../work/data:/work/data
       - ../ml-utils:/src/ml-utils
       - ../nnfabrik:/src/nnfabrik

@@ -1,0 +1,31 @@
+BootStrap: shub
+From: sinzlab/pytorch-singularity:v3.8-torch1.5.0-dj0.12.4
+
+%labels
+MAINTAINER Arne Nix <arnenix@gmail.com>
+
+%post
+    # install third-party libraries
+    # needed for vim extension in jupyter and tex export in matplotlib:
+    apt update && apt install -y \
+                          nodejs \
+                          npm \
+                          texlive-latex-extra \
+                          texlive-fonts-recommended \
+                          texlive-base \
+                          dvipng \
+                          zsh
+
+    python3.8 -m pip --no-cache-dir install \
+                               checkout_code \
+                               requests \
+                               imageio \
+                               scikit-image
+
+    jupyter labextension install @axlair/jupyterlab_vim
+
+%environment
+    export SHELL=/usr/bin/zsh
+
+%runscript
+    exec "$@"

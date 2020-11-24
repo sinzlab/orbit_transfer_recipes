@@ -3,6 +3,7 @@ Initial setup based on https://github.com/kuangliu/pytorch-cifar
 and https://github.com/weiaicunzai/pytorch-cifar100
 """
 import json
+import time
 from datetime import datetime
 import os
 
@@ -12,6 +13,17 @@ import subprocess
 import sys
 import site
 from importlib import reload
+from pathlib import Path
+
+
+def work_path(sub_path=""):
+    home_path = Path.home()
+    return os.path.join(home_path, "projects/bias_transfer_recipes/work", sub_path)
+
+
+def src_path(sub_path=""):
+    home_path = Path.home()
+    return os.path.join(home_path, "projects/", sub_path)
 
 
 def fill_tables(configs: dict):
@@ -32,9 +44,12 @@ def run_experiments(configs, train_table, order="random", level=0):
     from datajoint.errors import LostConnectionError
     from bias_transfer.tables.transfer import TransferredTrainedModel
     from bias_transfer.tables.nnfabrik import TrainedModelTransferRecipe
-    from bias_transfer.configs.trainer import TransferTrainerConfig
+    from bias_transfer.configs.trainer import (
+        TransferTrainerConfig,
+        TransferTrainerRegressionConfig,
+    )
 
-    os.chdir("/work/")
+    os.chdir(work_path())
     restrictions = []
     for config in configs.values():
         restr = config.get_restrictions(level)
@@ -44,11 +59,15 @@ def run_experiments(configs, train_table, order="random", level=0):
                 transfer_from = config.configs[level - 1].get_restrictions()[0]
                 transfer_from["collapsed_history"] = restr["collapsed_history"]
                 transfer_to = config.configs[level].get_restrictions()[0]
+                trainer_config = config.configs[level].trainer
                 TrainedModelTransferRecipe().add_entry(
                     transfer_from=transfer_from,
                     transfer_to=transfer_to,
                     transfer_step=level,
-                    data_transfer=isinstance(config.configs[level].trainer, TransferTrainerConfig),
+                    data_transfer=isinstance(
+                        trainer_config,
+                        (TransferTrainerConfig, TransferTrainerRegressionConfig),
+                    ),
                 )
                 TransferredTrainedModel.transfer_recipe = [TrainedModelTransferRecipe()]
     if not restrictions:
@@ -78,7 +97,7 @@ def analyse(experiment, analysis_method, dataset="validation"):
         NoiseStabilityAnalyzer,
     )
 
-    os.chdir("/work/")
+    os.chdir(work_path())
 
     for desc, exp in experiment.experiments.items():
         if analysis_method == "all" or analysis_method == desc.name:
@@ -87,7 +106,7 @@ def analyse(experiment, analysis_method, dataset="validation"):
                 name=desc.name,
                 table=TrainedModel(),
                 dataset=dataset,
-                base_path="/work/analysis",
+                base_path=work_path(sub_path="analysis"),
                 num_samples=200,
                 num_repeats=4,
                 noise_std_max=0.51,
@@ -102,43 +121,59 @@ def main(experiment):
 
 
 def checkout_and_install(
-    repo_name, commit_hash, src_path="/src", checkout_path="/work", dev_mode=False
+    repo_name,
+    commit_hash,
+    src_path=src_path(),
+    checkout_path=work_path(),
+    dev_mode=False,
 ):
     path = os.path.join(src_path, repo_name)
-    if not dev_mode:
-        checkout_path = os.path.join(checkout_path, repo_name)
-        if not os.path.exists(checkout_path):
-            os.makedirs(checkout_path)
-        subprocess.check_call(
-            [
-                "checkout_code",
-                "--repository",
-                path,
-                "--checkout-dir",
-                checkout_path,
-                "--commit-hash",
-                commit_hash,
-            ]
-        )
-        path = subprocess.check_output(
-            [
-                "checkout_code",
-                "--repository",
-                path,
-                "--checkout-dir",
-                checkout_path,
-                "--commit-hash",
-                commit_hash,
-                "--get-path",
-            ]
-        ).strip()  # run again to get path
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "-e", path])
+    checkout_path = os.path.join(checkout_path, repo_name)
+    if not os.path.exists(checkout_path):
+        os.makedirs(checkout_path)
+    lock = Path(os.path.join(checkout_path, "lock"))
+    while lock.exists():
+        time.sleep(1)
+    lock.touch()
+    try:
+        if not dev_mode:
+            subprocess.check_call(
+                [
+                    "checkout_code",
+                    "--repository",
+                    path,
+                    "--checkout-dir",
+                    checkout_path,
+                    "--commit-hash",
+                    commit_hash,
+                ]
+            )
+            path = subprocess.check_output(
+                [
+                    "checkout_code",
+                    "--repository",
+                    path,
+                    "--checkout-dir",
+                    checkout_path,
+                    "--commit-hash",
+                    commit_hash,
+                    "--get-path",
+                ]
+            ).strip()  # run again to get path
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "-e", path])
+    finally:
+        os.remove(lock)
     reload(site)  # this will add it to sys.path
     sys.path.insert(1, sys.path.pop(-1))  # move it to front
 
 
 def load_experiment(
-    recipe, experiment, schema=None, base_dir="./", import_prefix="", dev_mode=False
+    recipe,
+    experiment,
+    schema=None,
+    base_dir="./bias_transfer_recipes",
+    import_prefix="",
+    dev_mode=False,
 ):
     if not recipe:
         sub_dirs = [
@@ -190,7 +225,9 @@ def load_experiment(
         "secret_key": os.environ.get("MINIO_SECRET_KEY", "FAKEKEY"),
     }
     dj.config["custom"] = {}
-    dj.config["custom"]["nnfabrik.my_schema_name"] = schema if schema else f"bias_transfer_{recipe}"
+    dj.config["custom"]["nnfabrik.my_schema_name"] = (
+        schema if schema else f"bias_transfer_{recipe}"
+    )
 
     try:
         from bias_transfer.configs.base import Description
