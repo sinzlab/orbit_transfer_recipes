@@ -98,7 +98,7 @@ for dataset_sub_cls in ("FashionMNIST",):  # "MNIST",
                 "Freeze": {"freeze": ("core",)},
                 "Finetune": {},
                 "Dropout": {},
-                "Mixup": {"regularization": {"regularizer": "Mixup", "alpha": 0.0}},
+                "Mixup": {"regularization": {"regularizer": "Mixup", "alpha": 0.5}},
                 "L2-SP": {
                     "regularization": {
                         "regularizer": "L2SP",

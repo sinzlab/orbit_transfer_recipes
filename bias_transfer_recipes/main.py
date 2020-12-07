@@ -3,7 +3,6 @@ Initial setup based on https://github.com/kuangliu/pytorch-cifar
 and https://github.com/weiaicunzai/pytorch-cifar100
 """
 import json
-import time
 from datetime import datetime
 import os
 
@@ -14,11 +13,20 @@ import sys
 import site
 from importlib import reload
 from pathlib import Path
+from filelock import Timeout, FileLock
 
 
 def work_path(sub_path=""):
-    home_path = Path.home()
-    return os.path.join(home_path, "projects/bias_transfer_recipes/work", sub_path)
+    scratch = os.environ.get("SCRATCH")
+    if scratch:
+        path = os.path.join(scratch, "work", sub_path)
+    else:
+        home_path = Path.home()
+        path = os.path.join(home_path, "projects/bias_transfer_recipes/work", sub_path)
+    path = Path(path)
+    path.mkdir(parents=True, exist_ok=True)
+    return path
+
 
 
 def src_path(sub_path=""):
@@ -131,40 +139,40 @@ def checkout_and_install(
     checkout_path = os.path.join(checkout_path, repo_name)
     if not os.path.exists(checkout_path):
         os.makedirs(checkout_path)
-    lock = Path(os.path.join(checkout_path, "lock"))
-    while lock.exists():
-        time.sleep(1)
-    lock.touch()
     try:
-        if not dev_mode:
-            subprocess.check_call(
-                [
-                    "checkout_code",
-                    "--repository",
-                    path,
-                    "--checkout-dir",
-                    checkout_path,
-                    "--commit-hash",
-                    commit_hash,
-                ]
-            )
-            path = subprocess.check_output(
-                [
-                    "checkout_code",
-                    "--repository",
-                    path,
-                    "--checkout-dir",
-                    checkout_path,
-                    "--commit-hash",
-                    commit_hash,
-                    "--get-path",
-                ]
-            ).strip()  # run again to get path
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "-e", path])
-    finally:
-        os.remove(lock)
-    reload(site)  # this will add it to sys.path
-    sys.path.insert(1, sys.path.pop(-1))  # move it to front
+        lock = FileLock(
+            os.path.join(checkout_path, commit_hash + ".outer.lock"), timeout=30
+        )
+        with lock:
+            if not dev_mode:
+                subprocess.check_call(
+                    [
+                        "checkout_code",
+                        "--repository",
+                        path,
+                        "--checkout-dir",
+                        checkout_path,
+                        "--commit-hash",
+                        commit_hash,
+                    ]
+                )
+                path = subprocess.check_output(
+                    [
+                        "checkout_code",
+                        "--repository",
+                        path,
+                        "--checkout-dir",
+                        checkout_path,
+                        "--commit-hash",
+                        commit_hash,
+                        "--get-path",
+                    ]
+                ).strip()  # run again to get path
+            subprocess.check_call([sys.executable, "-m", "pip", "install", "-e", path])
+            reload(site)  # this will add it to sys.path
+            sys.path.insert(1, sys.path.pop(-1))  # move it to front
+    except Timeout:
+        print("Could not acquire lock. Timeout.")
 
 
 def load_experiment(
@@ -229,10 +237,6 @@ def load_experiment(
         schema if schema else f"bias_transfer_{recipe}"
     )
 
-    try:
-        from bias_transfer.configs.base import Description
-    except:
-        from bias_transfer.experiments import Description  # legacy dependence
     experiment_module = (
         import_prefix + recipe + ("." + experiment if experiment else "")
     )

@@ -35,10 +35,10 @@ baseline = Experiment(
 )
 
 
-seed = 23
+seed = 444
 for dataset_sub_cls in ("FashionMNIST",):  # "MNIST",
     for bias in (
-        ("clean", "color", "color_shuffle"),
+        # ("clean", "color", "color_shuffle"),
         # ("noise", "clean", "noise"),
         # ("translation", "clean", "translation"),
         ("rotation_regression", "clean", "rotation"),
@@ -48,10 +48,10 @@ for dataset_sub_cls in ("FashionMNIST",):  # "MNIST",
             # "Mixup",
             # "L2-SP",
             # "Freeze",
-            # "Finetune",
+            "Finetune",
             # "Dropout",
-            "RDL",
-            "KnowledgeDistillation",
+            # "RDL",
+            # "KnowledgeDistillation",
         ):
             if transfer_method == "KnowledgeDistillation" and "regression" in bias[0]:
                 continue
@@ -83,7 +83,12 @@ for dataset_sub_cls in ("FashionMNIST",):  # "MNIST",
                     input_channels=3 if "color" in bias[1] else 1,
                     type="lenet300-100" if bias[0] == "translation" else "lenet5",
                 ),
-                trainer=trainer_config_cls(baseline=baseline.trainer,),
+                trainer=trainer_config_cls(
+                    baseline=baseline.trainer,
+                    loss_functions={"regression": "CircularDistanceLoss"}
+                    if "regression" in bias[0]
+                    else {"img_classification": "CrossEntropyLoss"},
+                ),
                 seed=seed,
             )
             ######## step 2: generating data (optional)
@@ -225,7 +230,10 @@ for dataset_sub_cls in ("FashionMNIST",):  # "MNIST",
             )
 
             transfer_experiments[
-                Description(name=f"Transfer ({transfer_method}) ({bias[0]}->{bias[1]};{bias[2]})", seed=seed,)
+                Description(
+                    name=f"Transfer ({transfer_method}) ({bias[0]}->{bias[1]};{bias[2]})",
+                    seed=seed,
+                )
             ] = TransferExperiment(
                 [
                     experiments[

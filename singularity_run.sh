@@ -1,5 +1,6 @@
 #!/bin/bash
-singularity "$1" --nv \
+mkdir -p /tmp/djcache
+singularity $1 --nv \
                  --env-file .env \
                  --env "CUDA_VISIBLE_DEVICES=$2" \
                  --bind /tmp/djcache:/cache,/var/sinz-shared:/var/sinz-shared \
