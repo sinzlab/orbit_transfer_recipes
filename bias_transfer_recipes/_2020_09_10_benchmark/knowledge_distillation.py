@@ -50,7 +50,7 @@ for bias in (
 
     ####### step 1
     trainer_config_cls = (
-        trainer.RegressionTrainerConfig
+        trainer.Regression
         if "regression" in bias[0]
         else trainer.TrainerConfig
     )
@@ -136,7 +136,7 @@ for bias in (
             ),
             seed=seed,
         )
-        dataset_config_cls = dataset.TransferredDatasetConfig
+        dataset_config_cls = dataset.Generated
 
     ##### step 4: eval
     experiments[

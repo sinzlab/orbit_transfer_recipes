@@ -14,11 +14,11 @@ for seed in (
     experiments[
         Description(name="Sine Regression (Sin Activation)", seed=seed,)
     ] = Experiment(
-        dataset=dataset.RegressionDatasetConfig(
+        dataset=dataset.Regression(
             comment="Sine", dataset_cls="sine", batch_size=64, train_range=30
         ),
         model=model.RegressionModelConfig(comment="", layer_size=400, activation="sin"),
-        trainer=trainer.RegressionTrainerConfig(
+        trainer=trainer.Regression(
             comment="",
             max_iter=25000,
             lr_milestones=(5000, 15000),
@@ -32,11 +32,11 @@ for seed in (
     )
 
     experiments[Description(name="Sine Regression", seed=seed,)] = Experiment(
-        dataset=dataset.RegressionDatasetConfig(
+        dataset=dataset.Regression(
             comment="Sine", dataset_cls="sine", batch_size=64, train_range=30
         ),
         model=model.RegressionModelConfig(comment="", layer_size=400,),
-        trainer=trainer.RegressionTrainerConfig(
+        trainer=trainer.Regression(
             comment="",
             max_iter=25000,
             lr_milestones=(5000, 15000),
@@ -53,11 +53,11 @@ for seed in (
             name="Sine Regression Range 10 Transfer Core (Sin Activation)", seed=seed,
         )
     ] = Experiment(
-        dataset=dataset.RegressionDatasetConfig(
+        dataset=dataset.Regression(
             comment="Sine", dataset_cls="sine", batch_size=64, train_range=10
         ),
         model=model.RegressionModelConfig(comment="", layer_size=400, activation="sin"),
-        trainer=trainer.RegressionTrainerConfig(
+        trainer=trainer.Regression(
             comment="",
             max_iter=10000,
             lr_milestones=(5000, 7500),
@@ -78,13 +78,13 @@ for seed in (
             name="Sine Regression Range 10 Transfer RDM", seed=seed,
         )
     ] = Experiment(
-        dataset=dataset.RegressionDatasetConfig(
+        dataset=dataset.Regression(
             comment="Sine", dataset_cls="sine", batch_size=64, train_range=10
         ),
         model=model.RegressionModelConfig(
             comment="", layer_size=400, activation="sigmoid", rdm_prediction={"lambda":1.0}
         ),
-        trainer=trainer.RegressionTrainerConfig(
+        trainer=trainer.Regression(
             comment="RDM Transfer",
             max_iter=1000,
             lr_milestones=(5000, 7500),
@@ -103,13 +103,13 @@ for seed in (
             name="Sine Regression Range 10 Transfer RDM (Sin Activation)", seed=seed,
         )
     ] = Experiment(
-        dataset=dataset.RegressionDatasetConfig(
+        dataset=dataset.Regression(
             comment="Sine", dataset_cls="sine", batch_size=64, train_range=10
         ),
         model=model.RegressionModelConfig(
             comment="", layer_size=400, activation="sin", rdm_prediction={"lambda":1.0}
         ),
-        trainer=trainer.RegressionTrainerConfig(
+        trainer=trainer.Regression(
             comment="RDM Transfer",
             max_iter=1000,
             lr_milestones=(5000, 7500),
@@ -126,11 +126,11 @@ for seed in (
     experiments[
         Description(name="Sine Regression Range 10 Transfer Core", seed=seed,)
     ] = Experiment(
-        dataset=dataset.RegressionDatasetConfig(
+        dataset=dataset.Regression(
             comment="Sine", dataset_cls="sine", batch_size=64, train_range=10
         ),
         model=model.RegressionModelConfig(comment="", layer_size=400,),
-        trainer=trainer.RegressionTrainerConfig(
+        trainer=trainer.Regression(
             comment="",
             max_iter=10000,
             lr_milestones=(5000, 7500),
@@ -148,11 +148,11 @@ for seed in (
     experiments[
         Description(name="Sine Regression Range 10 (Sin Activation)", seed=seed,)
     ] = Experiment(
-        dataset=dataset.RegressionDatasetConfig(
+        dataset=dataset.Regression(
             comment="Sine", dataset_cls="sine", batch_size=64, train_range=10
         ),
         model=model.RegressionModelConfig(comment="", layer_size=400, activation="sin"),
-        trainer=trainer.RegressionTrainerConfig(
+        trainer=trainer.Regression(
             comment="",
             max_iter=10000,
             lr_milestones=(5000, 7500),
@@ -165,11 +165,11 @@ for seed in (
         seed=seed,
     )
     experiments[Description(name="Sine Regression Range 10", seed=seed,)] = Experiment(
-        dataset=dataset.RegressionDatasetConfig(
+        dataset=dataset.Regression(
             comment="Sine", dataset_cls="sine", batch_size=64, train_range=10
         ),
         model=model.RegressionModelConfig(comment="", layer_size=400,),
-        trainer=trainer.RegressionTrainerConfig(
+        trainer=trainer.Regression(
             comment="",
             max_iter=10000,
             lr_milestones=(5000, 7500),

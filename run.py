@@ -5,6 +5,7 @@ import argparse
 import os
 import stat
 import subprocess
+import time
 from pathlib import Path
 
 
@@ -140,3 +141,4 @@ if __name__ == "__main__":
             j=j,
         )
         job.run()
+        time.sleep(1)

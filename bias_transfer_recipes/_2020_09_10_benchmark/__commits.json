@@ -1,15 +1,9 @@
 {
   "default": {
-    "bias_transfer": "aff09c2ea28ec9a67b7fef07fb55252022cdb9d2",
-    "nnfabrik": "ecec34be27e7b65b7ee4f048883a66f6d1034a3d",
+    "bias_transfer": "c66cca657fee142fe9b40d9318fa5760c721f1ca",
+    "nnfabrik": "864de8f619bed7d1d474eb6974a5d26a9da911c9",
     "nnvision": "6ae2723d9f850e8ca7c0421066c519c3030d3adb",
     "ml-utils": "a15aaf19a966800cf42b1cb5432ed7693bbcee34",
     "pytorch_warmup": "2c4e51eff93233686c8108a75ec7a96ee1c6ea30"
-  },
-  "alphas": {
-    "bias_transfer": "a9a077b0b50a77a1ddc06415155dd8ad6d8390ab"
-  },
-  "knowledge_distillation": {
-    "bias_transfer": "a9a077b0b50a77a1ddc06415155dd8ad6d8390ab"
   }
 }

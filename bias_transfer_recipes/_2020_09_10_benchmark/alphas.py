@@ -46,10 +46,12 @@ for bias in (
     for transfer_method, alphas in (
         ("L2", (0.0001, 0.001, 0.01, 0.1, 0.005, 0.0005)),
         ("Mixup", (0.1, 0.2, 0.3, 0.4, 0.5, 0.6)),
-        ("L2-SP", (0.1, 0.5, 1.0, 2.0, 5.0, 10.0)),
         ("Freeze", ("",)),
         ("Finetune", ("",)),
-        ("Mixup", (0.1, 0.2, 0.3, 0.4, 0.5, 0.6)),
+        ("Dropout", (0.1, 0.2, 0.3, 0.4, 0.5, 0.6)),
+        ("L2-SP", (0.1, 0.5, 1.0, 2.0, 5.0, 10.0)),
+        ("EWC", (0.1, 0.5, 1.0, 2.0, 5.0, 10.0)),
+        ("SynapticIntelligence", (0.1, 0.5, 1.0, 2.0, 5.0, 10.0)),
         ("RDL", (0.1, 0.5, 1.0, 2.0, 5.0, 10.0),),
         ("KnowledgeDistillation", (0.1, 0.5, 1.0, 2.0, 5.0, 10.0)),
     ):
@@ -58,7 +60,7 @@ for bias in (
 
         ####### step 1
         trainer_config_cls = (
-            trainer.RegressionTrainerConfig
+            trainer.Regression
             if "regression" in bias[0]
             else trainer.TrainerConfig
         )
@@ -89,6 +91,10 @@ for bias in (
                 loss_functions={"regression": "CircularDistanceLoss"}
                 if "regression" in bias[0]
                 else {"img_classification": "CrossEntropyLoss"},
+                max_iter=400 if "regression" in bias[0] else 100,
+                lr_milestones=(100, 200, 300) if "regression" in bias[0] else (30, 60),
+                synaptic_intelligence_computation=transfer_method
+                == "SynapticIntelligence",
             ),
             seed=seed,
         )
@@ -112,7 +118,12 @@ for bias in (
             if "regression" in bias[0]
             else trainer.TransferTrainerConfig
         )
-        if transfer_method in ("RDL", "KnowledgeDistillation"):
+        if transfer_method in (
+            "RDL",
+            "KnowledgeDistillation",
+            "EWC",
+            "SynapticIntelligence",
+        ):
             experiments[
                 Description(
                     name=f"{dataset_sub_cls} Data Generation ({transfer_method}) {bias[0]}",
@@ -133,18 +144,31 @@ for bias in (
                     type="lenet300-100" if bias[0] == "translation" else "lenet5",
                     input_channels=3 if "color" in bias[1] else 1,
                     get_intermediate_rep=get_rep,
+                    add_buffer=("SI_omega", "SI_prev_task")
+                    if transfer_method == "SynapticIntelligence"
+                    else (),
                 ),
                 trainer=transfer_config_cls(
-                    comment=f"{dataset_sub_cls} Data Generation ({transfer_method};fixed) {bias[0]}",
+                    comment=f"{dataset_sub_cls} Data Generation ({transfer_method}) {bias[0]}",
                     baseline=baseline.trainer,
-                    save_input=True,
+                    save_input=transfer_method in ("RDL", "KnowledgeDistillation"),
+                    save_representation=transfer_method
+                    in ("RDL", "KnowledgeDistillation"),
+                    compute_fisher={"num_samples": 1024, "empirical": True}
+                    if transfer_method == "EWC"
+                    else {},
+                    compute_si_omega={"damping_factor": 0.0001}
+                    if transfer_method == "SynapticIntelligence"
+                    else {},
                     loss_functions={"regression": "CircularDistanceLoss"}
                     if "regression" in bias[0]
                     else {"img_classification": "CrossEntropyLoss"},
                 ),
                 seed=seed,
             )
-            dataset_config_cls = dataset.TransferredDatasetConfig
+
+            if transfer_method in ("RDL", "KnowledgeDistillation"):
+                dataset_config_cls = dataset.Generated
 
         ##### step 4: eval
         experiments[
@@ -188,10 +212,18 @@ for bias in (
                 "Mixup": {"regularization": {"regularizer": "Mixup", "alpha": alpha}},
                 "L2-SP": {
                     "regularization": {
-                        "regularizer": "L2SP",
+                        "regularizer": "ParamDistance",
                         "alpha": alpha,
                         "ignore_layers": ("fc3",) if "regression" in bias[0] else (),
                     }
+                },
+                "EWC": {
+                    "reset": False,
+                    "regularization": {"regularizer": "ParamDistance", "alpha": alpha,},
+                },
+                "SynapticIntelligence": {
+                    "reset": False,
+                    "regularization": {"regularizer": "ParamDistance", "alpha": alpha,},
                 },
                 "RDL": {
                     "reset": "all",
@@ -232,6 +264,9 @@ for bias in (
                     type="lenet300-100" if bias[0] == "translation" else "lenet5",
                     dropout=alpha if transfer_method == "Dropout" else 0.0,
                     get_intermediate_rep=get_rep,
+                    add_buffer=("importance",)
+                    if transfer_method in ("EWC", "SynapticIntelligence")
+                    else (),
                 ),
                 trainer=trainer.TrainerConfig(
                     comment=f"{dataset_sub_cls} Transfer ({transfer_method}: {alpha}) {bias[1]}",
@@ -262,7 +297,8 @@ for bias in (
                             )
                         ],
                     ]
-                    if transfer_method in ("RDL", "KnowledgeDistillation")
+                    if transfer_method
+                    in ("RDL", "KnowledgeDistillation", "EWC", "SynapticIntelligence")
                     else []
                 )
                 + [
@@ -357,7 +393,6 @@ for bias in (
         trainer=trainer.TrainerConfig(baseline=baseline.trainer, max_iter=0),
         seed=seed,
     )
-
 
     transfer_experiments[
         Description(

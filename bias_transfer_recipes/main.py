@@ -52,10 +52,6 @@ def run_experiments(configs, train_table, order="random", level=0):
     from datajoint.errors import LostConnectionError
     from bias_transfer.tables.transfer import TransferredTrainedModel
     from bias_transfer.tables.nnfabrik import TrainedModelTransferRecipe
-    from bias_transfer.configs.trainer import (
-        TransferTrainerConfig,
-        TransferTrainerRegressionConfig,
-    )
 
     os.chdir(work_path())
     restrictions = []
@@ -72,10 +68,7 @@ def run_experiments(configs, train_table, order="random", level=0):
                     transfer_from=transfer_from,
                     transfer_to=transfer_to,
                     transfer_step=level,
-                    data_transfer=isinstance(
-                        trainer_config,
-                        (TransferTrainerConfig, TransferTrainerRegressionConfig),
-                    ),
+                    data_transfer=trainer_config.data_transfer,
                 )
                 TransferredTrainedModel.transfer_recipe = [TrainedModelTransferRecipe()]
     if not restrictions:

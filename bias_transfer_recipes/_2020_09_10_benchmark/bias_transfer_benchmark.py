@@ -58,7 +58,7 @@ for dataset_sub_cls in ("FashionMNIST",):  # "MNIST",
 
             ####### step 1
             trainer_config_cls = (
-                trainer.RegressionTrainerConfig
+                trainer.Regression
                 if "regression" in bias[0]
                 else trainer.TrainerConfig
             )
@@ -173,7 +173,7 @@ for dataset_sub_cls in ("FashionMNIST",):  # "MNIST",
                     ),
                     seed=seed,
                 )
-                dataset_config_cls = dataset.TransferredDatasetConfig
+                dataset_config_cls = dataset.Generated
 
             ######## step 3: transfer
             experiments[
