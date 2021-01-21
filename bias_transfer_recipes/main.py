@@ -60,8 +60,7 @@ def run_experiments(configs, train_table, order="random", level=0):
         if restr:
             restrictions.append(restr)
             if level > 0:  # add recipe
-                transfer_from = config.configs[level - 1].get_restrictions()[0]
-                transfer_from["collapsed_history"] = restr["collapsed_history"]
+                transfer_from = config.get_restrictions(level-1)
                 transfer_to = config.configs[level].get_restrictions()[0]
                 trainer_config = config.configs[level].trainer
                 TrainedModelTransferRecipe().add_entry(
