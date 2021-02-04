@@ -80,25 +80,58 @@ if __name__ == "__main__":
         description="Running pre-defined recipes or analysis"
     )
     parser.add_argument(
-        "--njobs", dest="num_jobs", action="store", default=1, type=int, help="",
+        "--njobs",
+        dest="num_jobs",
+        action="store",
+        default=1,
+        type=int,
+        help="",
     )
     parser.add_argument(
-        "--name", dest="name", action="store", default="", type=str, help="",
+        "--name",
+        dest="name",
+        action="store",
+        default="",
+        type=str,
+        help="",
     )
     parser.add_argument(
-        "--time", dest="time", action="store", default=1, type=int, help="",
+        "--time",
+        dest="time",
+        action="store",
+        default=1,
+        type=int,
+        help="",
     )
     parser.add_argument(
-        "--gpu", dest="gpu", action="store", default="2080", type=str, help="",
+        "--gpu",
+        dest="gpu",
+        action="store",
+        default="2080",
+        type=str,
+        help="",
     )
     parser.add_argument(
-        "--ngpus", dest="num_gpus", action="store", default=1, type=int, help="",
+        "--ngpus",
+        dest="num_gpus",
+        action="store",
+        default=1,
+        type=int,
+        help="",
     )
     parser.add_argument(
-        "--memory", dest="memory", action="store", default=3000, type=int, help="",
+        "--memory",
+        dest="memory",
+        action="store",
+        default=3000,
+        type=int,
+        help="",
     )
     parser.add_argument(
-        "--force-rebuild", dest="force_rebuild", action="store_true", help="",
+        "--force-rebuild",
+        dest="force_rebuild",
+        action="store_true",
+        help="",
     )
     parser.add_argument(
         "--recipe", dest="recipe", action="store", type=str, help="", required=True
@@ -109,7 +142,8 @@ if __name__ == "__main__":
         action="store",
         type=str,
         help="",
-        required=True,
+        default="",
+        required=False,
     )
     parser.add_argument(
         "--email",

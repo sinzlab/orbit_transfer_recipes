@@ -1,0 +1,9 @@
+{
+  "default": {
+    "bias_transfer": "b5a9bc04385a7de2a8599ccd89cb1614baa51a22",
+    "nnfabrik": "9ad75029c46ecfde10c063f10eb1c0bceee1e199",
+    "nnvision": "b6cb6d1fe5813d03787c56404d70ca5774c76b54",
+    "neuralpredictors": "e6a5f945c54ea0996b9c2402f41017c5af0f8612",
+    "pytorch_warmup": "2c4e51eff93233686c8108a75ec7a96ee1c6ea30"
+  }
+}

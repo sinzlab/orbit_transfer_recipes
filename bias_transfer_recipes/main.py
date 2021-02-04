@@ -185,7 +185,7 @@ def load_experiment(
     if dev_mode:
         for repo in (
             "bias_transfer",
-            "ml-utils",
+            "neuralpredictors",
             "nnfabrik",
             "nnvision",
             "pytorch_warmup",
@@ -198,7 +198,7 @@ def load_experiment(
         default_commits = commits_dict.get("default", {})
         for repo in (
             "bias_transfer",
-            "ml-utils",
+            "neuralpredictors",
             "nnfabrik",
             "nnvision",
             "pytorch_warmup",
