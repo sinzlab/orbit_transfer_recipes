@@ -248,6 +248,12 @@ for rep_matching in (
             seed=seed,
         )
     )
+    transfer_experiments[
+        Description(
+            name=f"Transfer noise augmented {rep_matching}",
+            seed=seed,
+        )
+    ] = TransferExperiment(experiments[:1], update=transfer_settings[rep_matching][:1])
 
     transfer_experiments[
         Description(
