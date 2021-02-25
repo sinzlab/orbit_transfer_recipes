@@ -17,9 +17,12 @@ class SlurmJob:
         self.experiment = experiment
         self.name = f"{recipe}.{experiment}.{j}" if not name else name
         self.email = email
-        self.time = f"0-0{time}:00"  # TODO: more flexible!!
+        self.time = time
+        days, hours, minutes = list(
+            map(int, [time.split("-")[0]] + time.split("-")[1].split(":"))
+        )
         if "2080" in gpu:
-            self.gpu = "gpu-2080ti-dev" if time < 12 else "gpu-2080ti"
+            self.gpu = "gpu-2080ti-dev" if hours < 12 and days < 1 else "gpu-2080ti"
         else:
             self.gpu = "gpu-v100"
         self.gpu = "gpu-2080ti"
@@ -99,9 +102,9 @@ if __name__ == "__main__":
         "--time",
         dest="time",
         action="store",
-        default=1,
-        type=int,
-        help="",
+        default="0-00:00",
+        type=str,
+        help="time to complete each job. Specify in the following format: D-HH:MM",
     )
     parser.add_argument(
         "--gpu",
