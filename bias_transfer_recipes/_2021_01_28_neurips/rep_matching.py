@@ -9,7 +9,9 @@ transfer_experiments = {}
 class BaselineDataset(dataset.TinyImageNet):
     def __init__(self, **kwargs):
         self.load_kwargs(**kwargs)
+        self.dataset_cls: str = "TinyImageNet"
         self.add_corrupted_test: bool = False
+        self.apply_grayscale: bool = True
         self.batch_size = 128
         super(BaselineDataset, self).__init__(**kwargs)
 
@@ -17,6 +19,7 @@ class BaselineDataset(dataset.TinyImageNet):
 class BaselineModel(model.TinyImageNet):
     def __init__(self, **kwargs):
         self.load_kwargs(**kwargs)
+        self.input_channels = 1
         self.type: str = "vgg19-bn"
         # self.readout_type: str = "conv"
         super(BaselineModel, self).__init__(**kwargs)
@@ -118,12 +121,22 @@ vgg_layers = [
 
 for rep_matching in (
     "representation matching bn-freeze",
+    "representation matching bn-freeze cross-noise",
     "no representation matching bn-freeze",
+    "representation matching cross-noise",
     "representation matching",
     "no representation matching",
 ):
-    for layer in (
+    for layers in (
+        {
+            "features.0": "conv-1-1",
+            "features.3": "conv-1-2",
+            "features.7": "conv-2-1",
+            "features.10": "conv-2-2",
+            "features.14": "conv-3-1_and_before",
+        },
         {"features.14": "conv-3-1"},
+        {"features.14": "conv-3-1_extra_layer"},
         {"features.27": "conv-4-1"},
         {"features.40": "conv-5-1"},
         {"features.49": "core"},
@@ -133,16 +146,36 @@ for rep_matching in (
             "representation matching": [
                 {
                     "model": {
-                        "get_intermediate_rep": layer,
+                        "get_intermediate_rep": layers,
                     },
                     "trainer": {
                         "representation_matching": {
-                            "representations": list(layer.values()),
+                            "representations": list(layers.values()),
                             "criterion": "mse",
                             "combine_losses": "avg",
                             "second_noise_std": {(0, 0.5): 1.0},
                             "lambda": 1.0,
                             "only_for_clean": True,
+                            "extra_layer": ("extra_layer" in list(layers.values())[-1])
+                        },
+                    },
+                },
+                {"trainer": {"freeze_bn": False}},
+            ],
+            "representation matching cross-noise": [
+                {
+                    "model": {
+                        "get_intermediate_rep": layers,
+                    },
+                    "trainer": {
+                        "representation_matching": {
+                            "representations": list(layers.values()),
+                            "criterion": "mse",
+                            "combine_losses": "avg",
+                            "second_noise_std": {(0, 0.5): 1.0},
+                            "lambda": 1.0,
+                            "only_for_clean": False,
+                            "extra_layer": ("extra_layer" in list(layers.values())[-1])
                         },
                     },
                 },
@@ -151,16 +184,36 @@ for rep_matching in (
             "representation matching bn-freeze": [
                 {
                     "model": {
-                        "get_intermediate_rep": layer,
+                        "get_intermediate_rep": layers,
                     },
                     "trainer": {
                         "representation_matching": {
-                            "representations": list(layer.values()),
+                            "representations": list(layers.values()),
                             "criterion": "mse",
                             "combine_losses": "avg",
                             "second_noise_std": {(0, 0.5): 1.0},
                             "lambda": 1.0,
                             "only_for_clean": True,
+                            "extra_layer": ("extra_layer" in list(layers.values())[-1])
+                        },
+                    },
+                },
+                {"trainer": {"freeze_bn": True}},
+            ],
+            "representation matching bn-freeze cross-noise": [
+                {
+                    "model": {
+                        "get_intermediate_rep": layers,
+                    },
+                    "trainer": {
+                        "representation_matching": {
+                            "representations": list(layers.values()),
+                            "criterion": "mse",
+                            "combine_losses": "avg",
+                            "second_noise_std": {(0, 0.5): 1.0},
+                            "lambda": 1.0,
+                            "only_for_clean": False,
+                            "extra_layer": ("extra_layer" in list(layers.values())[-1])
                         },
                     },
                 },
@@ -194,7 +247,7 @@ for rep_matching in (
         )
 
         # Step 2: Training on Clean
-        layer_key = list(layer.keys())[-1]
+        layer_key = list(layers.keys())[-1]
         layer_index = len(vgg_layers) - 1
         while layer_key not in vgg_layers[layer_index]:
             layer_index -= 1
@@ -216,7 +269,7 @@ for rep_matching in (
         )
         transfer_experiments[
             Description(
-                name=f"Transfer noise augmented {rep_matching} {list(layer.values())[-1]}",
+                name=f"Transfer noise augmented {rep_matching} {list(layers.values())[-1]}",
                 seed=seed,
             )
         ] = TransferExperiment(
@@ -225,7 +278,7 @@ for rep_matching in (
 
         transfer_experiments[
             Description(
-                name=f"Transfer noise augmented -> clean {rep_matching} {list(layer.values())[-1]}",
+                name=f"Transfer noise augmented -> clean {rep_matching} {list(layers.values())[-1]}",
                 seed=seed,
             )
         ] = TransferExperiment(experiments, update=transfer_settings[rep_matching])

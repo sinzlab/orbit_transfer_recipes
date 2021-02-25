@@ -1,7 +1,7 @@
 {
   "default": {
-    "bias_transfer": "c60b128f443b2b8e36158b92cf2a4ae53e793472",
-    "nnfabrik": "ec5866039e96b464293fd86f8086174a51dc6b44",
+    "bias_transfer": "3a65bb5b4b273d6f61868c8683862350cd3367a8",
+    "nnfabrik": "d33d741ad944ba73733be0c747d5025ef3ce4e32",
     "nnvision": "b6cb6d1fe5813d03787c56404d70ca5774c76b54",
     "neuralpredictors": "e6a5f945c54ea0996b9c2402f41017c5af0f8612",
     "pytorch_warmup": "2c4e51eff93233686c8108a75ec7a96ee1c6ea30"
