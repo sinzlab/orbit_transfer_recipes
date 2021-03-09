@@ -120,12 +120,12 @@ vgg_layers = [
 ]
 
 for rep_matching in (
-    "representation matching bn-freeze",
+    # "representation matching bn-freeze",
     "representation matching bn-freeze cross-noise",
-    "no representation matching bn-freeze",
-    "representation matching cross-noise",
-    "representation matching",
-    "no representation matching",
+    # "no representation matching bn-freeze",
+    # "representation matching cross-noise",
+    # "representation matching",
+    # "no representation matching",
 ):
     for layers in (
         {
@@ -139,7 +139,7 @@ for rep_matching in (
         {"features.14": "conv-3-1_extra_layer"},
         {"features.27": "conv-4-1"},
         {"features.40": "conv-5-1"},
-        {"features.49": "core"},
+        # {"features.49": "core"},
     ):
         experiments = []
         transfer_settings = {
@@ -267,18 +267,49 @@ for rep_matching in (
                 seed=seed,
             )
         )
-        transfer_experiments[
-            Description(
-                name=f"Transfer noise augmented {rep_matching} {list(layers.values())[-1]}",
-                seed=seed,
-            )
-        ] = TransferExperiment(
-            experiments[:1], update=transfer_settings[rep_matching][:1]
-        )
+        # transfer_experiments[
+        #     Description(
+        #         name=f"Transfer noise augmented {rep_matching} {list(layers.values())[-1]}",
+        #         seed=seed,
+        #     )
+        # ] = TransferExperiment(
+        #     experiments[:1], update=transfer_settings[rep_matching][:1]
+        # )
 
         transfer_experiments[
             Description(
-                name=f"Transfer noise augmented -> clean {rep_matching} {list(layers.values())[-1]}",
+                name=f"Transfer noise augmented -> clean ({rep_matching}, {list(layers.values())[-1]})",
                 seed=seed,
             )
         ] = TransferExperiment(experiments, update=transfer_settings[rep_matching])
+
+
+experiments = []
+# Step 1: Training on Noise
+experiments.append(
+    Experiment(
+        dataset=BaselineDataset(),
+        model=BaselineModel(),
+        trainer=BaselineTrainer(
+            comment=f"Training ",
+            noise_std={
+                0.08: 0.1,
+                0.12: 0.1,
+                0.18: 0.1,
+                0.26: 0.1,
+                0.38: 0.1,
+                -1: 0.5,
+            },
+        ),
+        seed=seed,
+    )
+)
+
+transfer_experiments[
+    Description(
+        name=f"Noise augmented",
+        seed=seed,
+    )
+] = TransferExperiment(
+    experiments[:1], update=transfer_settings["no representation matching"][:1]
+)
