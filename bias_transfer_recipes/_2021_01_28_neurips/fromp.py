@@ -60,11 +60,11 @@ for bias in (
     # ("rotation_regression", "clean", "rotation"),
 ):
     for alpha, reset in (
-        (10.0, "all"),
+        # (10.0, "all"),
         (10.0, ""),
-        (1.0, "all"),
+        # (1.0, "all"),
         (1.0, ""),
-        (5.0, "all"),
+        # (5.0, "all"),
     ):
         experiments = []
         transfer = "FROMP"
@@ -183,7 +183,7 @@ for bias in (
         reset_string = "reset" if reset == "all" else ""
         transfer_experiments[
             Description(
-                name=f"Transfer {transfer} {reset_string}: {alpha} ({bias[0]}->{bias[1]};{bias[2]})",
+                name=f"{transfer} {reset_string}: {alpha} ({bias[0]}->{bias[1]};{bias[2]})",
                 seed=seed,
             )
         ] = TransferExperiment(experiments, update=transfer_settings[transfer])

@@ -29,6 +29,7 @@ class BaselineTrainer(
     trainer.mixins.TransferMixin,
     trainer.mixins.NoiseAugmentationMixin,
     trainer.mixins.RepresentationMatchingMixin,
+    trainer.mixins.RepresentationMonitorMixin,
     trainer.Classification,
 ):
     def __init__(self, **kwargs):
@@ -122,23 +123,24 @@ vgg_layers = [
 for rep_matching in (
     # "representation matching bn-freeze",
     "representation matching bn-freeze cross-noise",
-    # "no representation matching bn-freeze",
+    "representation matching bn-freeze cross-noise cosine",
+    "no representation matching bn-freeze",
     # "representation matching cross-noise",
     # "representation matching",
     # "no representation matching",
 ):
     for layers in (
-        {
-            "features.0": "conv-1-1",
-            "features.3": "conv-1-2",
-            "features.7": "conv-2-1",
-            "features.10": "conv-2-2",
-            "features.14": "conv-3-1_and_before",
-        },
+        # {
+        #     "features.0": "conv-1-1",
+        #     "features.3": "conv-1-2",
+        #     "features.7": "conv-2-1",
+        #     "features.10": "conv-2-2",
+        #     "features.14": "conv-3-1_and_before",
+        # },
         {"features.14": "conv-3-1"},
         {"features.14": "conv-3-1_extra_layer"},
-        {"features.27": "conv-4-1"},
-        {"features.40": "conv-5-1"},
+        # {"features.27": "conv-4-1"},
+        # {"features.40": "conv-5-1"},
         # {"features.49": "core"},
     ):
         experiments = []
@@ -156,7 +158,7 @@ for rep_matching in (
                             "second_noise_std": {(0, 0.5): 1.0},
                             "lambda": 1.0,
                             "only_for_clean": True,
-                            "extra_layer": ("extra_layer" in list(layers.values())[-1])
+                            "extra_layer": ("extra_layer" in list(layers.values())[-1]),
                         },
                     },
                 },
@@ -175,7 +177,7 @@ for rep_matching in (
                             "second_noise_std": {(0, 0.5): 1.0},
                             "lambda": 1.0,
                             "only_for_clean": False,
-                            "extra_layer": ("extra_layer" in list(layers.values())[-1])
+                            "extra_layer": ("extra_layer" in list(layers.values())[-1]),
                         },
                     },
                 },
@@ -194,7 +196,29 @@ for rep_matching in (
                             "second_noise_std": {(0, 0.5): 1.0},
                             "lambda": 1.0,
                             "only_for_clean": True,
-                            "extra_layer": ("extra_layer" in list(layers.values())[-1])
+                            "extra_layer": ("extra_layer" in list(layers.values())[-1]),
+                        },
+                    },
+                },
+                {"trainer": {"freeze_bn": True}},
+            ],
+            "representation matching bn-freeze cross-noise cosine": [
+                {
+                    "model": {
+                        "get_intermediate_rep": layers,
+                    },
+                    "trainer": {
+                        "representation_monitor": {
+                            "representations": list(layers.values()),
+                        },
+                        "representation_matching": {
+                            "representations": list(layers.values()),
+                            "criterion": "cosine",
+                            "combine_losses": "avg",
+                            "second_noise_std": {(0, 0.5): 1.0},
+                            "lambda": 1.0,
+                            "only_for_clean": False,
+                            "extra_layer": ("extra_layer" in list(layers.values())[-1]),
                         },
                     },
                 },
@@ -206,6 +230,9 @@ for rep_matching in (
                         "get_intermediate_rep": layers,
                     },
                     "trainer": {
+                        "representation_monitor": {
+                            "representations": list(layers.values()),
+                        },
                         "representation_matching": {
                             "representations": list(layers.values()),
                             "criterion": "mse",
@@ -213,14 +240,23 @@ for rep_matching in (
                             "second_noise_std": {(0, 0.5): 1.0},
                             "lambda": 1.0,
                             "only_for_clean": False,
-                            "extra_layer": ("extra_layer" in list(layers.values())[-1])
+                            "extra_layer": ("extra_layer" in list(layers.values())[-1]),
                         },
                     },
                 },
                 {"trainer": {"freeze_bn": True}},
             ],
             "no representation matching bn-freeze": [
-                {},
+                {
+                    "model": {
+                        "get_intermediate_rep": layers,
+                    },
+                    "trainer": {
+                        "representation_monitor": {
+                            "representations": list(layers.values()),
+                        },
+                    },
+                },
                 {"trainer": {"freeze_bn": True}},
             ],
             "no representation matching": [{}, {"trainer": {"freeze_bn": False}}],
@@ -267,14 +303,14 @@ for rep_matching in (
                 seed=seed,
             )
         )
-        # transfer_experiments[
-        #     Description(
-        #         name=f"Transfer noise augmented {rep_matching} {list(layers.values())[-1]}",
-        #         seed=seed,
-        #     )
-        # ] = TransferExperiment(
-        #     experiments[:1], update=transfer_settings[rep_matching][:1]
-        # )
+        transfer_experiments[
+            Description(
+                name=f"Transfer noise augmented {rep_matching} {list(layers.values())[-1]}",
+                seed=seed,
+            )
+        ] = TransferExperiment(
+            experiments[:1], update=transfer_settings[rep_matching][:1]
+        )
 
         transfer_experiments[
             Description(
@@ -283,7 +319,7 @@ for rep_matching in (
             )
         ] = TransferExperiment(experiments, update=transfer_settings[rep_matching])
 
-
+#
 experiments = []
 # Step 1: Training on Noise
 experiments.append(

@@ -56,7 +56,9 @@ for bias in (
     ("translation", "clean", "translation"),
     # ("rotation_regression", "clean", "rotation"),
 ):
-    for reset in ("", "all"):
+    for reset in ("",
+                  # , "all"
+                  ):
         experiments = []
         transfer = "FRCL"
         transfer_settings = {
@@ -245,7 +247,7 @@ for bias in (
         reset_string = "reset" if reset == "all" else ""
         transfer_experiments[
             Description(
-                name=f"Transfer {transfer} {reset_string}: ({bias[0]}->{bias[1]};{bias[2]})",
+                name=f"{transfer} {reset_string}: ({bias[0]}->{bias[1]};{bias[2]})",
                 seed=seed,
             )
         ] = TransferExperiment(experiments, update=transfer_settings[transfer])

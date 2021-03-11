@@ -61,11 +61,21 @@ for bias in (
         ("Freeze", ("",), ("",)),
         ("Finetune", ("",), ("",)),
         # ("Dropout", (0.1, 0.2, 0.3, 0.4, 0.5, 0.6), ("",)),
-        ("L2-SP", (0.1, 0.5, 1.0, 2.0, 5.0, 10.0), ("", "all")),
-        ("EWC", (0.1, 0.5, 1.0, 2.0, 5.0, 10.0), ("", "all")),
-        ("SynapticIntelligence", (0.1, 0.5, 1.0, 2.0, 5.0, 10.0), ("", "all")),
-        ("RDL", (0.1, 0.5, 1.0, 2.0, 5.0, 10.0), ("", "all")),
-        ("KnowledgeDistillation", (0.1, 0.5, 1.0, 2.0, 5.0, 10.0), ("", "all")),
+        ("L2-SP", (0.1, 0.5, 1.0, 2.0, 5.0, 10.0), ("",
+                                                    # "all"
+                                                    )),
+        ("EWC", (0.1, 0.5, 1.0, 2.0, 5.0, 10.0), ("",
+                                                  # "all"
+                                                  )),
+        ("SynapticIntelligence", (0.1, 0.5, 1.0, 2.0, 5.0, 10.0), ("",
+                                                                   # "all"
+                                                                   )),
+        ("RDL", (0.1, 0.5, 1.0, 2.0, 5.0, 10.0), ("",
+                                                  # "all"
+                                                  )),
+        ("KnowledgeDistillation", (0.1, 0.5, 1.0, 2.0, 5.0, 10.0), ("",
+                                                                    # "all"
+                                                                    )),
     ):
         for alpha in alphas:
             for reset in resets:
@@ -327,7 +337,7 @@ for bias in (
                 reset_string = "reset" if reset == "all" else ""
                 transfer_experiments[
                     Description(
-                        name=f"Transfer {transfer} {reset_string}: {alpha} ({bias[0]}->{bias[1]};{bias[2]})",
+                        name=f"{transfer} {reset_string}: {alpha} ({bias[0]}->{bias[1]};{bias[2]})",
                         seed=seed,
                     )
                 ] = TransferExperiment(experiments, update=transfer_settings[transfer])

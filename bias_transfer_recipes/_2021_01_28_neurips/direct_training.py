@@ -97,7 +97,7 @@ for bias in (
 
     transfer_experiments[
         Description(
-            name=f"Direct Training A ({bias[0]}->{bias[1]};{bias[2]})",
+            name=f"Direct Training on Target ({bias[0]}->{bias[1]};{bias[2]})",
             seed=seed,
         )
     ] = TransferExperiment(experiments)
@@ -143,7 +143,7 @@ for bias in (
 
     transfer_experiments[
         Description(
-            name=f"Direct Training B ({bias[2]};{bias[0]}->{bias[1]})",
+            name=f"Direct Training on Eval ({bias[2]};{bias[0]}->{bias[1]})",
             seed=seed,
         )
     ] = TransferExperiment(experiments)

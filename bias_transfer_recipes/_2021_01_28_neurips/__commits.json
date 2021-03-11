@@ -5,5 +5,8 @@
     "nnvision": "b6cb6d1fe5813d03787c56404d70ca5774c76b54",
     "neuralpredictors": "e6a5f945c54ea0996b9c2402f41017c5af0f8612",
     "pytorch_warmup": "2c4e51eff93233686c8108a75ec7a96ee1c6ea30"
+  },
+  "rep_matching": {
+    "bias_transfer": "44160681c486dc44e7c4ba662a4259e7e1cbb27a"
   }
 }
