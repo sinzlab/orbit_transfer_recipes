@@ -50,8 +50,8 @@ def fill_tables(configs: dict):
 
 def run_experiments(configs, train_table, order="random", level=0):
     from datajoint.errors import LostConnectionError
-    from bias_transfer.tables.transfer import TransferredTrainedModel
-    from bias_transfer.tables.nnfabrik import TrainedModelTransferRecipe
+    from nntransfer.tables.transfer import TransferredTrainedModel
+    from nntransfer.tables.nnfabrik import TrainedModelTransferRecipe
 
     os.chdir(work_path())
     restrictions = []
@@ -84,7 +84,7 @@ def run_experiments(configs, train_table, order="random", level=0):
 
 
 def run_all_experiments(configs):
-    from bias_transfer.tables.transfer import TransferredTrainedModel
+    from nntransfer.tables.transfer import TransferredTrainedModel
 
     level = 0
     while run_experiments(configs, TransferredTrainedModel(), level=level):
@@ -92,8 +92,8 @@ def run_all_experiments(configs):
 
 
 def analyse(experiment, analysis_method, dataset="validation"):
-    from bias_transfer.tables.trained_model import TrainedModel
-    from bias_transfer.analysis.representation.noise_stability import (
+    from nntransfer.tables.trained_model import TrainedModel
+    from nntransfer.analysis.representation.noise_stability import (
         NoiseStabilityAnalyzer,
     )
 
@@ -185,6 +185,8 @@ def load_experiment(
     if dev_mode:
         for repo in (
             "bias_transfer",
+            "nntransfer",
+            "nnplayground",
             "neuralpredictors",
             "nnfabrik",
             "nnvision",
@@ -198,6 +200,8 @@ def load_experiment(
         default_commits = commits_dict.get("default", {})
         for repo in (
             "bias_transfer",
+            "nntransfer",
+            "nnplayground",
             "neuralpredictors",
             "nnfabrik",
             "nnvision",

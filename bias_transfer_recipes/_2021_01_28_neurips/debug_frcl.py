@@ -1,7 +1,7 @@
-from bias_transfer.configs.base import Description
-from bias_transfer.configs.transfer_experiment import TransferExperiment
-from bias_transfer.configs.experiment import Experiment
-from bias_transfer.configs import model, dataset, trainer
+from nntransfer.configs.base import Description
+from nntransfer.configs.transfer_experiment import TransferExperiment
+from nntransfer.configs.experiment import Experiment
+from nntransfer.configs import model, dataset, trainer
 
 transfer_experiments = {}
 

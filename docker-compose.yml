@@ -88,7 +88,7 @@ services:
     volumes:
       - ./:/recipes
       - ../:/misc
-      - ../work/data:/work/data
+      - ../work:/work
       - ../neuralpredictors:/src/neuralpredictors
       - ../nnfabrik:/src/nnfabrik
       - ../nnvision:/src/nnvision
