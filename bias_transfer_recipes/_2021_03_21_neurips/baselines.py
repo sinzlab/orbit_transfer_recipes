@@ -309,6 +309,7 @@ for environment in (
                         ),
                         trainer=trainer_config_cls(
                             comment=f"MNIST-Transfer {environment[0][0]}"
+
                         ),
                         seed=seed,
                     )
