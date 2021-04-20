@@ -1,7 +1,7 @@
 {
   "default": {
-    "bias_transfer": "795f97223a3ac78466c94975094a608a3ac8c505",
-    "nntransfer": "6b1297c5b7d7f7fddf0c5aaf6dac013d80e5e5c4",
+    "bias_transfer": "a9b2eedc365c762613f6f46f92789fd82ce6106e",
+    "nntransfer": "28f1761197b3925af3ce48d870bb196676f62e30",
     "nnplayground": "51671056a81f0dfd18d9d8b262c294b334363a53",
     "nnfabrik": "d5282b03880b3971891d8061780c936c5e32bf66",
     "nnvision": "b6cb6d1fe5813d03787c56404d70ca5774c76b54",
