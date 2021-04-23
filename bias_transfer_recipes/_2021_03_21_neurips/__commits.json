@@ -1,11 +1,11 @@
 {
   "default": {
-    "bias_transfer": "035fb7929a0f99258463d29869a9b135614c34f7",
-    "nntransfer": "28f1761197b3925af3ce48d870bb196676f62e30",
+    "bias_transfer": "97f5e77ce649785c175297048db375f9ba35454b",
+    "nntransfer": "ff862d69b6fe69cfaeab14ba1cd8bbfe03771010",
     "nnplayground": "51671056a81f0dfd18d9d8b262c294b334363a53",
-    "nnfabrik": "d5282b03880b3971891d8061780c936c5e32bf66",
+    "nnfabrik": "353cef0c4a78ad8081c4777553ca2dd8ab7818e6",
     "nnvision": "b6cb6d1fe5813d03787c56404d70ca5774c76b54",
-    "neuralpredictors": "0b2e9cd7cd565b3f37fe77e2b803cdd09ae91869",
+    "neuralpredictors": "98504878a26c6c3f5be0168653e336a8c5555d2c",
     "pytorch_warmup": "2c4e51eff93233686c8108a75ec7a96ee1c6ea30"
   }
 }

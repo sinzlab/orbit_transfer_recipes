@@ -14,6 +14,12 @@ class BaselineDataset(MNISTTransfer):
         super().__init__(**kwargs)
 
 
+class GeneratedDataset(Generated, BaselineDataset):
+    def __init__(self, **kwargs):
+        self.load_kwargs(**kwargs)
+        super().__init__(**kwargs)
+
+
 class BaselineModel(MNISTTransferModel):
     def __init__(self, **kwargs):
         self.load_kwargs(**kwargs)
@@ -24,7 +30,7 @@ class BaselineModel(MNISTTransferModel):
 class BaselineTrainer(TransferMixin, Classification):
     def __init__(self, **kwargs):
         self.load_kwargs(**kwargs)
-        self.max_iter = 1
+        self.max_iter = 100
         self.patience = 1000
         super().__init__(**kwargs)
 
@@ -36,7 +42,7 @@ class BaselineSimclrTrainer(SimclrMixin, BaselineTrainer):
 class BaselineRegressionTrainer(TransferMixin, Regression):
     def __init__(self, **kwargs):
         self.load_kwargs(**kwargs)
-        self.max_iter = 1
+        self.max_iter = 100
         self.patience = 1000
         self.readout_name = "fc3"
         self.loss_functions = {"regression": "MSELoss"}
@@ -63,55 +69,40 @@ class DataGeneratorRegression(DataGenerationMixin, Regression):
 seed = 42
 for environment in (
     (
-        ("clean", "classification", "conv"),
-        ("color", "classification", "conv"),
-        ("color_shuffle", "classification", "conv"),
-    ),
-    (
-        ("noise", "simclr", "conv"),
-        ("low_resource", "classification", "conv"),
-        ("noise", "classification", "conv"),
-    ),
-    (
-        ("clean", "classification", "conv"),
         ("clean", "classification", "mlp"),
-        ("translation", "classification", "mlp"),
+        ("color", "classification", "mlp"),
+        ("color_shuffle", "classification", "mlp"),
     ),
+    # (
+    #     ("noise", "simclr", "conv"),
+    #     ("low_resource", "classification", "conv"),
+    #     ("noise", "classification", "conv"),
+    # ),
+    # (
+    #     ("clean", "classification", "conv"),
+    #     ("clean", "classification", "mlp"),
+    #     ("translation", "classification", "mlp"),
+    # ),
     (
-        ("scale", "split-classification 0-4", "conv"),
-        ("clean", "split-classification 5-9", "conv"),
-        ("scale", "classification", "conv"),
+        ("scale", "split-classification 0-4", "mlp"),
+        ("clean", "split-classification 5-9", "mlp"),
+        ("scale", "classification", "mlp"),
     ),
 ):
     for transfer, alphas, resets in (
-        # ("L2", (0.0001, 0.001, 0.01, 0.1, 0.005, 0.0005), ("",)),
-        # ("Mixup", (0.1, 0.2, 0.3, 0.4, 0.5, 0.6), ("",)),
-        ("Freeze", ("",), ("",)),
-        ("Finetune", ("",), ("",)),
-        # ("Dropout", (0.1, 0.2, 0.3, 0.4, 0.5, 0.6), ("",)),
         (
-            "L2-SP",
-            (0.1, 0.5, 1.0, 2.0, 5.0, 10.0),
+            "ELRG L2",
+            (1.0,),
             ("",),
         ),
         (
-            "EWC",
-            (0.1, 0.5, 1.0, 2.0, 5.0, 10.0),
+            "Posterior L2",
+            (1.0,),
             ("",),
         ),
         (
-            "SynapticIntelligence",
-            (0.1, 0.5, 1.0, 2.0, 5.0, 10.0),
-            ("",),
-        ),
-        (
-            "RDL",
-            (0.1, 0.5, 1.0, 2.0, 5.0, 10.0),
-            ("",),
-        ),
-        (
-            "KnowledgeDistillation",
-            (0.1, 0.5, 1.0, 2.0, 5.0, 10.0),
+            "VCL",
+            (1.0,),
             ("",),
         ),
     ):
@@ -119,53 +110,54 @@ for environment in (
             for reset in resets:
                 experiments = []
                 softmax_temp = 1.0
+                rank = 4
                 transfer_settings = {
-                    "L2": [
+                    "VCL": [
                         {},
                         {
                             "trainer": {
-                                "reset": reset,
-                                "optimizer_options": {
-                                    "amsgrad": False,
-                                    "lr": 0.0003,
-                                    "weight_decay": alpha,
+                                "regularization": {
+                                    "regularizer": "VCL",
+                                    "alpha": alpha,
                                 },
-                            }
-                        },
-                    ],
-                    "Freeze": [{}, {"trainer": {"reset": reset, "freeze": ("core",)}}],
-                    "Finetune": [
-                        {},
-                        {
-                            "trainer": {
-                                "reset": reset,
                             },
                         },
-                    ],
-                    "Dropout": [
-                        {},
                         {
-                            "model": {"dropout": alpha},
                             "trainer": {
-                                "reset": reset,
+                                "reset_for_new_task": True,
                             },
                         },
-                    ],
-                    "Mixup": [
-                        {},
                         {
                             "trainer": {
                                 "reset": reset,
                                 "regularization": {
-                                    "regularizer": "Mixup",
+                                    "regularizer": "VCL",
                                     "alpha": alpha,
                                 },
-                            }
+                            },
                         },
                     ],
-                    "L2-SP": [
+                    "Posterior L2": [
                         {},
                         {
+                            "trainer": {
+                                "regularization": {
+                                    "regularizer": "VCL",
+                                    "alpha": alpha,
+                                },
+                            },
+                        },
+                        {
+                            "trainer": {
+                                "bayesian_to_deterministic": True,
+                                "reset_for_new_task": True,
+                            },
+                        },
+                        {
+                            "model": {
+                                "type": "lenet300-100",
+                                "add_buffer": ("importance",),
+                            },
                             "trainer": {
                                 "reset": reset,
                                 "regularization": {
@@ -176,111 +168,65 @@ for environment in (
                                     or "simclr" in environment[0][1]
                                     else (),
                                 },
-                            }
+                            },
+                        },
+                        {
+                            "model": {"type": "lenet300-100"},
                         },
                     ],
-                    "RDL": [
+                    "ELRG L2": [
                         {},
                         {
                             "model": {
-                                "get_intermediate_rep": {"fc2": "fc2"}
-                            },  # get_rep["fc2"] = "core" get_rep["conv2"] = "core"
-                            "trainer": {
-                                "save_representation": True,
-                                "save_input": True,
-                                "data_transfer": True,
+                                "type": "lenet300-100-elrg",
+                                "alpha": None,
+                                "rank": rank,
                             },
-                        },
-                        {
-                            "model": {"get_intermediate_rep": {"fc2": "fc2"}},
                             "trainer": {
-                                "reset": reset,
-                                "single_input_stream": False,
                                 "regularization": {
-                                    "regularizer": "RDL",
+                                    "regularizer": "ELRG",
                                     "alpha": alpha,
-                                    "dist_measure": "corr",
-                                    "decay_alpha": False,
                                 },
                             },
                         },
-                    ],
-                    "KnowledgeDistillation": [
-                        {},
-                        {
-                            "model": {"get_intermediate_rep": {"fc3": "fc3"}},
-                            "trainer": {
-                                "save_representation": True,
-                                "save_input": True,
-                                "data_transfer": True,
-                            },
-                        },
-                        {
-                            "model": {"get_intermediate_rep": {"fc3": "fc3"}},
-                            "trainer": {
-                                "reset": reset,
-                                "single_input_stream": False,
-                                "regularization": {
-                                    "regularizer": "KnowledgeDistillation",
-                                    "alpha": alpha,
-                                    "decay_alpha": False,
-                                    "softmax_temp": softmax_temp,
-                                },
-                            },
-                        },
-                    ],
-                    "EWC": [
-                        {},
-                        {
-                            "trainer": {
-                                "compute_fisher": {
-                                    "num_samples": 1024,
-                                    "empirical": True,
-                                }
-                            }
-                        },
-                        {
-                            "model": {"add_buffer": ("importance",)},
-                            "trainer": {
-                                "reset": reset,
-                                "regularization": {
-                                    "regularizer": "ParamDistance",
-                                    "alpha": alpha,
-                                    "ignore_layers": ("fc3",)
-                                    if "regression" in environment[0][1]
-                                    or "simclr" in environment[0][1]
-                                    else (),
-                                },
-                            },
-                        },
-                    ],
-                    "SynapticIntelligence": [
-                        {"trainer": {"synaptic_intelligence_computation": True}},
                         {
                             "model": {
-                                "add_buffer": ("SI_omega", "SI_prev_task"),
+                                "type": "lenet300-100-elrg",
+                                "alpha": None,
+                                "rank": rank,
                             },
-                            "trainer": {"compute_si_omega": {"damping_factor": 0.0001}},
+                            "trainer": {
+                                "bayesian_to_deterministic": True,
+                                "reset_for_new_task": False,
+                            },
                         },
                         {
-                            "model": {"add_buffer": ("importance",)},
+                            "model": {
+                                "type": "lenet300-100",
+                                "add_buffer": ("importance", ("importance_v", rank)),
+                            },
                             "trainer": {
                                 "reset": reset,
                                 "regularization": {
                                     "regularizer": "ParamDistance",
                                     "alpha": alpha,
+                                    "use_elrg_importance": True,
                                     "ignore_layers": ("fc3",)
                                     if "regression" in environment[0][1]
                                     or "simclr" in environment[0][1]
                                     else (),
                                 },
                             },
+                        },
+                        {
+                            "model": {"type": "lenet300-100"},
                         },
                     ],
                 }
 
-                if transfer == "KnowledgeDistillation" and (
-                    "regression" in environment[0][1] or "simclr" in environment[0][1]
+                if (
+                    transfer == "KnowledgeDistillation"
+                    and "regression" in environment[0][1]
                 ):
                     continue
                 if environment[0][1] == "simclr":
@@ -298,7 +244,7 @@ for environment in (
                 else:
                     split = ()
 
-                # Step 1: Training on source_bias
+                # Step 1: Normal training on source_bias
                 experiments.append(
                     Experiment(
                         dataset=BaselineDataset(
@@ -310,52 +256,69 @@ for environment in (
                         model=BaselineModel(
                             bias=environment[0][0],
                             input_channels=3 if "color" in environment[1][0] else 1,
-                            type="lenet5",
+                            type="lenet300-100",
                             get_intermediate_rep={"fc2": "fc2"}
                             if environment[0][1] == "simclr"
                             else {},
                         ),
                         trainer=trainer_config_cls(
-                            comment=f"MNIST-Transfer {environment[0][0]}"
+                            comment=f"MNIST-Transfer Normal training on {environment[0][0]}"
                         ),
                         seed=seed,
                     )
                 )
 
-                # (Step 1.1: Data Generation)
-                if transfer in (
-                    "RDL",
-                    "KnowledgeDistillation",
-                    "EWC",
-                    "SynapticIntelligence",
-                ):
-                    experiments.append(
-                        Experiment(
-                            dataset=BaselineDataset(
-                                bias=environment[0][0],
-                                shuffle=False,
-                                valid_size=0.0,
-                                convert_to_rgb=("color" in environment[1][0]),
-                                filter_classes=split,
-                                reduce_to_filtered_classes=False,
-                            ),
-                            model=BaselineModel(
-                                bias=environment[0][0],
-                                input_channels=3 if "color" in environment[1][0] else 1,
-                                type="lenet5",
-                                get_intermediate_rep={"fc2": "fc2"}
-                                if environment[0][1] == "simclr"
-                                else {},
-                            ),
-                            trainer=transfer_config_cls(
-                                comment=f"MNIST Data Generation ({transfer}) {environment[0][0]}",
-                            ),
-                            seed=seed,
-                        )
+                # Step 3: Training on source_bias with VCL Loss
+                experiments.append(
+                    Experiment(
+                        dataset=BaselineDataset(
+                            bias=environment[0][0],
+                            convert_to_rgb=("color" in environment[1][0]),
+                            filter_classes=split,
+                            reduce_to_filtered_classes=False,
+                        ),
+                        model=BaselineModel(
+                            bias=environment[0][0],
+                            input_channels=3 if "color" in environment[1][0] else 1,
+                            type="lenet300-100-bayes",
+                            get_intermediate_rep={"fc2": "fc2"}
+                            if environment[0][1] == "simclr"
+                            else {},
+                        ),
+                        trainer=trainer_config_cls(
+                            comment=f"MNIST-Transfer {environment[0][0]}",
+                            data_transfer=True,
+                        ),
+                        seed=seed,
                     )
+                )
 
-                # Step 2: Training on bias[1]
+                # Step 4: Move parameters to prior
+                experiments.append(
+                    Experiment(
+                        dataset=BaselineDataset(
+                            bias=environment[1][0],
+                            shuffle=False,
+                            valid_size=0.0,
+                            filter_classes=split,
+                            reduce_to_filtered_classes=False,
+                        ),
+                        model=BaselineModel(
+                            bias=environment[1][0],
+                            input_channels=3 if "color" in environment[1][0] else 1,
+                            type="lenet300-100-bayes",
+                            get_intermediate_rep={"fc2": "fc2"}
+                            if environment[1][1] == "simclr"
+                            else {},
+                        ),
+                        trainer=transfer_config_cls(
+                            comment=f"MNIST Update Coreset ({transfer}) {environment[1][0]}",
+                        ),
+                        seed=seed,
+                    )
+                )
 
+                # Step 5: Training on target bias with VCL loss
                 if "split" in environment[1][1]:
                     split = tuple(map(int, environment[1][1].split()[1].split("-")))
                 else:
@@ -371,9 +334,7 @@ for environment in (
                         ),
                         model=BaselineModel(
                             bias=environment[1][0],
-                            type="lenet300-100"
-                            if environment[1][2] == "mlp"
-                            else "lenet5",
+                            type="lenet300-100-bayes",
                         ),
                         trainer=BaselineTrainer(
                             comment=f"MNIST Transfer ({transfer}) {environment[1][0]}",
@@ -382,7 +343,7 @@ for environment in (
                     )
                 )
 
-                # Step 3: Test on bias[2]
+                # Step 6: Test on bias[2]
                 experiments.append(
                     Experiment(
                         dataset=BaselineDataset(
@@ -391,9 +352,7 @@ for environment in (
                         model=BaselineModel(
                             bias=environment[2][0],
                             input_channels=3 if "color" in environment[1][0] else 1,
-                            type="lenet300-100"
-                            if environment[2][2] == "mlp"
-                            else "lenet5",
+                            type="lenet300-100-bayes",
                         ),
                         trainer=BaselineTrainer(
                             comment=f"Test MNIST-Transfer {environment[2][0]}",
