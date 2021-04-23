@@ -110,7 +110,7 @@ for environment in (
             for reset in resets:
                 experiments = []
                 softmax_temp = 1.0
-                rank = 4
+                rank = 5
                 transfer_settings = {
                     "VCL": [
                         {},
