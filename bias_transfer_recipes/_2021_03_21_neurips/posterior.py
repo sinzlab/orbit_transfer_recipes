@@ -91,12 +91,12 @@ for environment in (
 ):
     for transfer, alphas, resets in (
         (
-            "ELRG L2",
+            "ELRG L2-SP",
             (1.0,),
             ("",),
         ),
         (
-            "Posterior L2",
+            "MF L2-SP",
             (1.0,),
             ("",),
         ),
@@ -110,7 +110,7 @@ for environment in (
             for reset in resets:
                 experiments = []
                 softmax_temp = 1.0
-                rank = 5
+                rank = 8
                 transfer_settings = {
                     "VCL": [
                         {},
@@ -137,7 +137,7 @@ for environment in (
                             },
                         },
                     ],
-                    "Posterior L2": [
+                    "MF L2-SP": [
                         {},
                         {
                             "trainer": {
@@ -174,7 +174,7 @@ for environment in (
                             "model": {"type": "lenet300-100"},
                         },
                     ],
-                    "ELRG L2": [
+                    "ELRG L2-SP": [
                         {},
                         {
                             "model": {

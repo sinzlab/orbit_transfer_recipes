@@ -12,8 +12,8 @@ transfer_experiments = {}
 class DatasetA(ToyDatasetConfig):
     def __init__(self, **kwargs):
         self.load_kwargs(**kwargs)
-        self.cov_a = [[40, 0], [0, 0.001]]
-        self.cov_b = [[40, 0], [0, 0.001]]
+        self.cov_a = [[40, -40], [0, 0.001]]
+        self.cov_b = [[40, -40], [0, 0.001]]
         self.mu_a = [0, 0.5]
         self.mu_b = [0, -0.5]
         super().__init__(**kwargs)
@@ -22,18 +22,18 @@ class DatasetA(ToyDatasetConfig):
 class DatasetB(ToyDatasetConfig):
     def __init__(self, **kwargs):
         self.load_kwargs(**kwargs)
-        self.cov_a = [[0.05, 0], [0, 0.001]]
-        self.cov_b = [[0.05, 0], [0, 0.001]]
-        self.mu_a = [0.5, -0.5]
-        self.mu_b = [-0.5, 0.5]
+        self.cov_a = [[0.05, -0.05], [0, 0.001]]
+        self.cov_b = [[0.05, -0.05], [0, 0.001]]
+        self.mu_a = [0.0, -0.5]
+        self.mu_b = [0.0, 0.5]
         super().__init__(**kwargs)
 
 
 class DatasetC(ToyDatasetConfig):
     def __init__(self, **kwargs):
         self.load_kwargs(**kwargs)
-        self.cov_a = [[40, 0], [0, 0.001]]
-        self.cov_b = [[40, 0], [0, 0.001]]
+        self.cov_a = [[40, -40], [0, 0.001]]
+        self.cov_b = [[40, -40], [0, 0.001]]
         self.mu_a = [0, -0.5]
         self.mu_b = [0, 0.5]
         super().__init__(**kwargs)
@@ -191,6 +191,7 @@ for transfer in (
                     "type": "linear-elrg",
                     "alpha": 1/rank,
                     "rank": rank,
+                    "train_var": True
                 },
                 "trainer": {
                     "regularization": {
@@ -218,7 +219,7 @@ for transfer in (
                     "reset": reset,
                     "regularization": {
                         "regularizer": "ParamDistance",
-                        "alpha": 0.01 * alpha,
+                        "alpha":0.001 * alpha,
                         "use_elrg_importance": True,
                     },
                 },
