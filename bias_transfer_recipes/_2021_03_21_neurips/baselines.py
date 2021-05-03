@@ -47,6 +47,10 @@ class DataGenerator(DataGenerationMixin, Classification):
     fn = "bias_transfer.trainer.transfer"
 
 
+class GeneratedDataset(Generated, BaselineDataset):
+    pass
+
+
 class DataGeneratorSimclr(SimclrMixin, DataGenerationMixin, Classification):
     fn = "bias_transfer.trainer.transfer"
 
@@ -62,58 +66,64 @@ class DataGeneratorRegression(DataGenerationMixin, Regression):
 
 seed = 42
 for environment in (
+    # (
+    #     ("clean", "classification", "conv"),
+    #     ("color", "classification", "conv"),
+    #     ("color_shuffle", "classification", "conv"),
+    # ),
+    # (
+    #     ("noise", "simclr", "conv"),
+    #     ("low_resource", "classification", "conv"),
+    #     ("noise", "classification", "conv"),
+    # ),
     (
         ("clean", "classification", "conv"),
-        ("color", "classification", "conv"),
-        ("color_shuffle", "classification", "conv"),
-    ),
-    (
-        ("noise", "simclr", "conv"),
-        ("low_resource", "classification", "conv"),
-        ("noise", "classification", "conv"),
+        ("clean", "classification", "lc"),
+        ("translation", "classification", "lc"),
     ),
     (
         ("clean", "classification", "conv"),
-        ("clean", "classification", "mlp"),
-        ("translation", "classification", "mlp"),
+        ("clean", "classification", "fc"),
+        ("translation", "classification", "fc"),
     ),
-    (
-        ("scale", "split-classification 0-4", "conv"),
-        ("clean", "split-classification 5-9", "conv"),
-        ("scale", "classification", "conv"),
-    ),
+    # (
+    #     ("scale", "split-classification 0-4", "conv"),
+    #     ("clean", "split-classification 5-9", "conv"),
+    #     ("scale", "classification", "conv"),
+    # ),
 ):
     for transfer, alphas, resets in (
         # ("L2", (0.0001, 0.001, 0.01, 0.1, 0.005, 0.0005), ("",)),
         # ("Mixup", (0.1, 0.2, 0.3, 0.4, 0.5, 0.6), ("",)),
-        ("Freeze", ("",), ("",)),
-        ("Finetune", ("",), ("",)),
-        # ("Dropout", (0.1, 0.2, 0.3, 0.4, 0.5, 0.6), ("",)),
-        (
-            "L2-SP",
-            (0.1, 0.5, 1.0, 2.0, 5.0, 10.0),
-            ("",),
-        ),
-        (
-            "EWC",
-            (0.1, 0.5, 1.0, 2.0, 5.0, 10.0),
-            ("",),
-        ),
-        (
-            "SynapticIntelligence",
-            (0.1, 0.5, 1.0, 2.0, 5.0, 10.0),
-            ("",),
-        ),
-        (
-            "RDL",
-            (0.1, 0.5, 1.0, 2.0, 5.0, 10.0),
-            ("",),
-        ),
+        # ("Freeze", ("",), ("",)),
+        ("Finetune", ("",), ("all",)),
+        # ("FROMP", (1.0,), ("all",)),
+        # # ("Dropout", (0.1, 0.2, 0.3, 0.4, 0.5, 0.6), ("",)),
+        # (
+        #     "L2-SP",
+        #     (0.1, 0.5, 1.0, 2.0, 5.0, 10.0),
+        #     ("",),
+        # ),
+        # (
+        #     "EWC",
+        #     (0.1, 0.5, 1.0, 2.0, 5.0, 10.0),
+        #     ("",),
+        # ),
+        # (
+        #     "SynapticIntelligence",
+        #     (0.1, 0.5, 1.0, 2.0, 5.0, 10.0),
+        #     ("",),
+        # ),
+        # (
+        #     "RDL",
+        #     (0.1, 0.5, 1.0, 2.0, 5.0, 10.0),
+        #     ("",),
+        # ),
         (
             "KnowledgeDistillation",
-            (0.1, 0.5, 1.0, 2.0, 5.0, 10.0),
-            ("",),
-        ),
+            (0.1, 0.9, 1.0, 2.0, 5.0, 10.0),
+            ("all",),
+        )
     ):
         for alpha in alphas:
             for reset in resets:
@@ -226,6 +236,7 @@ for environment in (
                                     "decay_alpha": False,
                                     "softmax_temp": softmax_temp,
                                 },
+                                "data_transfer": True,
                             },
                         },
                     ],
@@ -277,6 +288,34 @@ for environment in (
                             },
                         },
                     ],
+                    "FROMP": [
+                        {},
+                        {
+                            "trainer": {
+                                "data_transfer": True,
+                                "extract_coreset": {
+                                    "method": "fromp",
+                                    "size": 200,
+                                },
+                                "compute_covariance": {"batch_size": 32},
+                            },
+                        },
+                        {
+                            "dataset": {"load_coreset": True},
+                            "trainer": {
+                                "reset": reset,
+                                "regularization": {
+                                    "regularizer": "FROMP",
+                                    "prior_prec": 1e-4,
+                                    "eps": 1e-8,
+                                    "grad_clip_norm": 100,
+                                    "alpha": alpha,
+                                },
+                                "data_transfer": True,
+                            },
+                        },
+                        {},
+                    ],
                 }
 
                 if transfer == "KnowledgeDistillation" and (
@@ -311,6 +350,7 @@ for environment in (
                             bias=environment[0][0],
                             input_channels=3 if "color" in environment[1][0] else 1,
                             type="lenet5",
+                            core_type=environment[0][2],
                             get_intermediate_rep={"fc2": "fc2"}
                             if environment[0][1] == "simclr"
                             else {},
@@ -328,6 +368,7 @@ for environment in (
                     "KnowledgeDistillation",
                     "EWC",
                     "SynapticIntelligence",
+                    "FROMP"
                 ):
                     experiments.append(
                         Experiment(
@@ -343,6 +384,7 @@ for environment in (
                                 bias=environment[0][0],
                                 input_channels=3 if "color" in environment[1][0] else 1,
                                 type="lenet5",
+                                core_type=environment[0][2],
                                 get_intermediate_rep={"fc2": "fc2"}
                                 if environment[0][1] == "simclr"
                                 else {},
@@ -354,6 +396,11 @@ for environment in (
                         )
                     )
 
+                if transfer in ("RDL", "KnowledgeDistillation", "FROMP"):
+                    target_dataset = GeneratedDataset
+                else:
+                    target_dataset = BaselineDataset
+
                 # Step 2: Training on bias[1]
 
                 if "split" in environment[1][1]:
@@ -363,7 +410,7 @@ for environment in (
 
                 experiments.append(
                     Experiment(
-                        dataset=BaselineDataset(
+                        dataset=target_dataset(
                             dataset_cls="MNIST-Transfer",
                             bias=environment[1][0],
                             filter_classes=split,
@@ -371,9 +418,8 @@ for environment in (
                         ),
                         model=BaselineModel(
                             bias=environment[1][0],
-                            type="lenet300-100"
-                            if environment[1][2] == "mlp"
-                            else "lenet5",
+                            type="lenet5",
+                            core_type=environment[1][2],
                         ),
                         trainer=BaselineTrainer(
                             comment=f"MNIST Transfer ({transfer}) {environment[1][0]}",
@@ -391,9 +437,8 @@ for environment in (
                         model=BaselineModel(
                             bias=environment[2][0],
                             input_channels=3 if "color" in environment[1][0] else 1,
-                            type="lenet300-100"
-                            if environment[2][2] == "mlp"
-                            else "lenet5",
+                            type="lenet5",
+                            core_type=environment[2][2],
                         ),
                         trainer=BaselineTrainer(
                             comment=f"Test MNIST-Transfer {environment[2][0]}",
@@ -406,7 +451,7 @@ for environment in (
                 reset_string = "reset" if reset == "all" else ""
                 transfer_experiments[
                     Description(
-                        name=f"{transfer} {reset_string}: {alpha} ({environment[0][0]}->{environment[1][0]};{environment[2][0]})",
+                        name=f"{transfer} {reset_string}: {alpha} ({environment[0][0]}-{environment[0][2]}->{environment[1][0]}-{environment[1][2]};{environment[2][0]}-{environment[2][2]})",
                         seed=seed,
                     )
                 ] = TransferExperiment(experiments, update=transfer_settings[transfer])

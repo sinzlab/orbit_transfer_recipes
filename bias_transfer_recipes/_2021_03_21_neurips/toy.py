@@ -74,7 +74,7 @@ for transfer in (
     # "RDL",
     # "KnowledgeDistillation",
 ):
-    alpha = 1.0
+    gamma = 1.0
     reset = "all"
     experiments = []
     softmax_temp = 1.0
@@ -88,7 +88,7 @@ for transfer in (
                     "optimizer_options": {
                         "amsgrad": False,
                         "lr": 0.001,
-                        "weight_decay": alpha,
+                        "weight_decay": gamma,
                     },
                 }
             },
@@ -105,7 +105,7 @@ for transfer in (
         "Dropout": [
             {},
             {
-                "model": {"dropout": alpha},
+                "model": {"dropout": gamma},
                 "trainer": {
                     "reset": reset,
                 },
@@ -118,7 +118,7 @@ for transfer in (
                     "reset": reset,
                     "regularization": {
                         "regularizer": "Mixup",
-                        "alpha": alpha,
+                        "gamma": gamma,
                     },
                 }
             },
@@ -130,7 +130,7 @@ for transfer in (
                     "reset": reset,
                     "regularization": {
                         "regularizer": "ParamDistance",
-                        "alpha": 1.0,
+                        "gamma": 1.0,
                         # "ignore_layers": ("fc3",) if "regression" in bias[0] else (),
                     },
                 }
@@ -143,7 +143,7 @@ for transfer in (
                     "reset": reset,
                     "regularization": {
                         "regularizer": "ParamDistance",
-                        "alpha": alpha,
+                        "gamma": gamma,
                         "custom_importance": {
                             "weight": np.array([[1, 0], [0, 1]], dtype=np.float32)
                         },
@@ -159,7 +159,7 @@ for transfer in (
                 "trainer": {
                     "regularization": {
                         "regularizer": "VCL",
-                        "alpha": alpha,
+                        "gamma": gamma,
                     },
                 },
             },
@@ -180,7 +180,7 @@ for transfer in (
                     "reset": reset,
                     "regularization": {
                         "regularizer": "ParamDistance",
-                        "alpha": alpha,
+                        "gamma": gamma,
                     },
                 },
             },
@@ -189,21 +189,26 @@ for transfer in (
             {
                 "model": {
                     "type": "linear-elrg",
-                    "alpha": 1/rank,
+                    "alpha": 1 / rank,
                     "rank": rank,
+                    "train_var": False,
+                    "initial_var": 1e-12
                 },
                 "trainer": {
                     "regularization": {
                         "regularizer": "ELRG",
-                        "alpha": alpha,
+                        "prior_var": 1.0,
+                        "num_samples": 100
                     },
                 },
             },
             {
                 "model": {
                     "type": "linear-elrg",
-                    "alpha": 1/rank,
+                    "alpha": 1 / rank,
                     "rank": rank,
+                    "train_var": False,
+                    "initial_var": 1e-12
                 },
                 "trainer": {
                     "bayesian_to_deterministic": True,
@@ -218,7 +223,8 @@ for transfer in (
                     "reset": reset,
                     "regularization": {
                         "regularizer": "ParamDistance",
-                        "alpha": 0.01 * alpha,
+                        "gamma": gamma,
+                        "elrg_alpha": 1 / rank,
                         "use_elrg_importance": True,
                     },
                 },
@@ -243,9 +249,9 @@ for transfer in (
                     "single_input_stream": False,
                     "regularization": {
                         "regularizer": "RDL",
-                        "alpha": alpha,
+                        "gamma": gamma,
                         "dist_measure": "corr",
-                        "decay_alpha": False,
+                        "decay_gamma": False,
                     },
                 },
             },
@@ -267,8 +273,8 @@ for transfer in (
                     "single_input_stream": False,
                     "regularization": {
                         "regularizer": "KnowledgeDistillation",
-                        "alpha": alpha,
-                        "decay_alpha": False,
+                        "gamma": gamma,
+                        "decay_gamma": False,
                         "softmax_temp": softmax_temp,
                     },
                 },
@@ -290,7 +296,7 @@ for transfer in (
                     "reset": reset,
                     "regularization": {
                         "regularizer": "ParamDistance",
-                        "alpha": 50000000.0,
+                        "gamma": 50000000.0,
                     },
                 },
             },
@@ -309,7 +315,7 @@ for transfer in (
                     "reset": reset,
                     "regularization": {
                         "regularizer": "ParamDistance",
-                        "alpha": alpha,
+                        "gamma": gamma,
                     },
                 },
             },
