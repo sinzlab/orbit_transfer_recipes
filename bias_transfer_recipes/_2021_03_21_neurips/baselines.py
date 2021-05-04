@@ -81,11 +81,11 @@ for environment in (
         ("clean", "classification", "lc"),
         ("translation", "classification", "lc"),
     ),
-    (
-        ("clean", "classification", "conv"),
-        ("clean", "classification", "fc"),
-        ("translation", "classification", "fc"),
-    ),
+    # (
+    #     ("clean", "classification", "conv"),
+    #     ("clean", "classification", "fc"),
+    #     ("translation", "classification", "fc"),
+    # ),
     # (
     #     ("scale", "split-classification 0-4", "conv"),
     #     ("clean", "split-classification 5-9", "conv"),
@@ -114,16 +114,24 @@ for environment in (
         #     (0.1, 0.5, 1.0, 2.0, 5.0, 10.0),
         #     ("",),
         # ),
-        # (
-        #     "RDL",
-        #     (0.1, 0.5, 1.0, 2.0, 5.0, 10.0),
-        #     ("",),
-        # ),
+        (
+            "RDL",
+            (0.1, 0.5, 1.0, 2.0, 5.0, 10.0),
+            ("all",),
+        ),
         (
             "KnowledgeDistillation",
-            (0.1, 0.9, 1.0, 2.0, 5.0, 10.0),
+            (
+                0.1,
+                0.9,
+                1.0,
+                2.0,
+                5.0,
+                10.0,
+                -1,
+            ),
             ("all",),
-        )
+        ),
     ):
         for alpha in alphas:
             for reset in resets:
@@ -212,6 +220,7 @@ for environment in (
                                     "dist_measure": "corr",
                                     "decay_alpha": False,
                                 },
+                                "data_transfer": True,
                             },
                         },
                     ],
@@ -232,11 +241,12 @@ for environment in (
                                 "single_input_stream": False,
                                 "regularization": {
                                     "regularizer": "KnowledgeDistillation",
-                                    "alpha": alpha,
+                                    "alpha": alpha if alpha != -1 else 1.0,
                                     "decay_alpha": False,
                                     "softmax_temp": softmax_temp,
                                 },
                                 "data_transfer": True,
+                                "ignore_main_loss": alpha == -1,
                             },
                         },
                     ],
@@ -368,7 +378,7 @@ for environment in (
                     "KnowledgeDistillation",
                     "EWC",
                     "SynapticIntelligence",
-                    "FROMP"
+                    "FROMP",
                 ):
                     experiments.append(
                         Experiment(
