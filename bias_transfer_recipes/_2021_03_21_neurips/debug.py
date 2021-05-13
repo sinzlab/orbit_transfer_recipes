@@ -10,6 +10,7 @@ transfer_experiments = {}
 class BaselineDataset(MNISTTransfer):
     def __init__(self, **kwargs):
         self.load_kwargs(**kwargs)
+        self.batch_size = 64
         self.dataset_sub_cls = "FashionMNIST"
         super().__init__(**kwargs)
 
@@ -17,14 +18,14 @@ class BaselineDataset(MNISTTransfer):
 class BaselineModel(MNISTTransferModel):
     def __init__(self, **kwargs):
         self.load_kwargs(**kwargs)
-        self.coreset_size = 200
+        self.coreset_size = 50
         super().__init__(**kwargs)
 
 
 class BaselineTrainer(TransferMixin, Classification):
     def __init__(self, **kwargs):
         self.load_kwargs(**kwargs)
-        self.max_iter = 100
+        self.max_iter = 1
         self.patience = 1000
         super().__init__(**kwargs)
 
@@ -36,7 +37,7 @@ class BaselineSimclrTrainer(SimclrMixin, BaselineTrainer):
 class BaselineRegressionTrainer(TransferMixin, Regression):
     def __init__(self, **kwargs):
         self.load_kwargs(**kwargs)
-        self.max_iter = 100
+        self.max_iter = 1
         self.patience = 1000
         self.readout_name = "fc3"
         self.loss_functions = {"regression": "MSELoss"}
@@ -64,7 +65,7 @@ class DataGeneratorRegression(DataGenerationMixin, Regression):
         super(DataGeneratorRegression, self).__init__(**kwargs)
 
 
-seed = 42
+seed = 8
 for environment in (
     # (
     #     ("clean", "classification", "conv"),
@@ -81,11 +82,11 @@ for environment in (
         ("clean", "classification", "lc"),
         ("translation", "classification", "lc"),
     ),
-    (
-        ("clean", "classification", "conv"),
-        ("clean", "classification", "fc"),
-        ("translation", "classification", "fc"),
-    ),
+    # (
+    #     ("clean", "classification", "conv"),
+    #     ("clean", "classification", "fc"),
+    #     ("translation", "classification", "fc"),
+    # ),
     # (
     #     ("scale", "split-classification 0-4", "conv"),
     #     ("clean", "split-classification 5-9", "conv"),
@@ -96,9 +97,10 @@ for environment in (
         # ("L2", (0.0001, 0.001, 0.01, 0.1, 0.005, 0.0005), ("",)),
         # ("Mixup", (0.1, 0.2, 0.3, 0.4, 0.5, 0.6), ("",)),
         # ("Freeze", ("",), ("",)),
-        ("Finetune", ("",), ("all",)),
+        # ("Finetune", ("",), ("all",)),
         # ("FROMP", (1.0,), ("all",)),
-        # # ("Dropout", (0.1, 0.2, 0.3, 0.4, 0.5, 0.6), ("",)),
+        # ("FD-MC-Dropout", (1.0,), ("all",)),
+        ("FD-MC-Dropout-Cov", (1.0,), ("all",)),
         # (
         #     "L2-SP",
         #     (0.1, 0.5, 1.0, 2.0, 5.0, 10.0),
@@ -114,24 +116,24 @@ for environment in (
         #     (0.1, 0.5, 1.0, 2.0, 5.0, 10.0),
         #     ("",),
         # ),
-        (
-            "RDL",
-            (0.1, 0.5, 1.0, 2.0, 5.0, 10.0),
-            ("all",),
-        ),
-        (
-            "KnowledgeDistillation",
-            (
-                0.1,
-                0.9,
-                1.0,
-                2.0,
-                5.0,
-                10.0,
-                -1,
-            ),
-            ("all",),
-        ),
+        # (
+        #     "RDL",
+        #     (0.1, 0.5, 1.0, 2.0, 5.0, 10.0),
+        #     ("all",),
+        # ),
+        # (
+        #     "KnowledgeDistillation",
+        #     (
+        #         0.1,
+        #         0.9,
+        #         1.0,
+        #         2.0,
+        #         5.0,
+        #         10.0,
+        #         -1,
+        #     ),
+        #     ("all",),
+        # ),
     ):
         for alpha in alphas:
             for reset in resets:
@@ -224,6 +226,86 @@ for environment in (
                             },
                         },
                     ],
+                    "FD-MC-Dropout-Cov": [
+                        {
+                            "model": {"dropout": 0.5},
+                        },
+                        {
+                            "model": {
+                                "get_intermediate_rep": {"fc3": "fc3"},
+                                "dropout": 0.5,
+                            },
+                            "trainer": {
+                                "save_representation": True,
+                                "save_input": True,
+                                "data_transfer": True,
+                                "mc_dropout_samples": 10,
+                                "apply_softmax": True,
+                                "softmax_temp": 1.0,
+                                "compute_covariance": {
+                                    "type": "full",
+                                    "precision": "double",
+                                    "eps": 1e-12,
+                                    "n_components": 10,
+                                },
+                            },
+                        },
+                        {
+                            "model": {
+                                "get_intermediate_rep": {"fc3": "fc3"},
+                                "add_custom_buffer": {"fc3_cov_lambdas": (10,)},
+                            },
+                            "trainer": {
+                                "reset": reset,
+                                "single_input_stream": False,
+                                "regularization": {
+                                    "regularizer": "FunctionDistance",
+                                    "alpha": alpha if alpha != -1 else 1.0,
+                                    "decay_alpha": False,
+                                    "softmax_temp": softmax_temp,
+                                    "use_softmax": True,
+                                    "cov_eps": 1e-12,
+                                },
+                                "data_transfer": True,
+                                "ignore_main_loss": alpha == -1,
+                            },
+                        },
+                    ],
+                    "FD-MC-Dropout": [
+                        {
+                            "model": {"dropout": 0.5},
+                        },
+                        {
+                            "model": {
+                                "get_intermediate_rep": {"fc3": "fc3"},
+                                "dropout": 0.5,
+                            },
+                            "trainer": {
+                                "save_representation": True,
+                                "save_input": True,
+                                "data_transfer": True,
+                                "mc_dropout_samples": 2,
+                                "apply_softmax": True,
+                                "softmax_temp": 1.0,
+                            },
+                        },
+                        {
+                            "model": {"get_intermediate_rep": {"fc3": "fc3"}},
+                            "trainer": {
+                                "reset": reset,
+                                "single_input_stream": False,
+                                "regularization": {
+                                    "regularizer": "FunctionDistance",
+                                    "alpha": alpha if alpha != -1 else 1.0,
+                                    "decay_alpha": False,
+                                    "softmax_temp": softmax_temp,
+                                    "use_softmax": True,
+                                },
+                                "data_transfer": True,
+                                "ignore_main_loss": alpha == -1,
+                            },
+                        },
+                    ],
                     "KnowledgeDistillation": [
                         {},
                         {
@@ -305,9 +387,17 @@ for environment in (
                                 "data_transfer": True,
                                 "extract_coreset": {
                                     "method": "fromp",
-                                    "size": 200,
+                                    "size": 50,
                                 },
                                 "compute_covariance": {"batch_size": 32},
+                                "regularization": {
+                                    "regularizer": "FROMP",
+                                    "prior_prec": 1e-4,
+                                    "eps": 1e-8,
+                                    "grad_clip_norm": 100,
+                                    "alpha": alpha,
+                                },
+                                "init_fromp": True,
                             },
                         },
                         {
@@ -379,6 +469,8 @@ for environment in (
                     "EWC",
                     "SynapticIntelligence",
                     "FROMP",
+                    "FD-MC-Dropout",
+                    "FD-MC-Dropout-Cov",
                 ):
                     experiments.append(
                         Experiment(
@@ -406,7 +498,13 @@ for environment in (
                         )
                     )
 
-                if transfer in ("RDL", "KnowledgeDistillation", "FROMP"):
+                if transfer in (
+                    "RDL",
+                    "KnowledgeDistillation",
+                    "FROMP",
+                    "FD-MC-Dropout",
+                    "FD-MC-Dropout-Cov",
+                ):
                     target_dataset = GeneratedDataset
                 else:
                     target_dataset = BaselineDataset
@@ -457,7 +555,6 @@ for environment in (
                         seed=seed,
                     )
                 )
-
                 reset_string = "reset" if reset == "all" else ""
                 transfer_experiments[
                     Description(

@@ -1,9 +1,9 @@
 {
   "default": {
-    "bias_transfer": "941745bdfe456041669d24ba1b0ad25970cbf84f",
-    "nntransfer": "e46e274d8004c9e7d501ce42d92fb466ed64ebf0",
+    "bias_transfer": "d12e687a58fe8d01a99514a703ce5d671a663be2",
+    "nntransfer": "4e52e5cff408a385030a1b50b19cc2265793a7b0",
     "nnplayground": "51671056a81f0dfd18d9d8b262c294b334363a53",
-    "nnfabrik": "353cef0c4a78ad8081c4777553ca2dd8ab7818e6",
+    "nnfabrik": "4abb1e14b0b7ad75cb68109925887867eda0a355",
     "nnvision": "b6cb6d1fe5813d03787c56404d70ca5774c76b54",
     "neuralpredictors": "98504878a26c6c3f5be0168653e336a8c5555d2c",
     "pytorch_warmup": "2c4e51eff93233686c8108a75ec7a96ee1c6ea30"
