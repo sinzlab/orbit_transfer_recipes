@@ -111,11 +111,11 @@ possible_settings = {
 
 seed = 8
 for environment in (
-    # (
-    #     ("clean", "classification", "conv"),
-    #     ("color", "classification", "conv"),
-    #     ("color_shuffle", "classification", "conv"),
-    # ),
+    (
+        ("clean", "classification", "conv"),
+        ("color", "classification", "conv"),
+        ("color_shuffle", "classification", "conv"),
+    ),
     # (
     #     ("noise", "simclr", "conv"),
     #     ("low_resource", "classification", "conv"),
@@ -126,16 +126,16 @@ for environment in (
         ("clean", "classification", "lc"),
         ("translation", "classification", "lc"),
     ),
-    # (
-    #     ("clean", "classification", "conv"),
-    #     ("clean", "classification", "fc"),
-    #     ("translation", "classification", "fc"),
-    # ),
-    # (
-    #     ("scale", "split-classification 0-4", "conv"),
-    #     ("clean", "split-classification 5-9", "conv"),
-    #     ("scale", "classification", "conv"),
-    # ),
+    (
+        ("clean", "classification", "conv"),
+        ("clean", "classification", "fc"),
+        ("translation", "classification", "fc"),
+    ),
+    (
+        ("scale", "split-classification 0-4", "conv"),
+        ("clean", "split-classification 5-9", "conv"),
+        ("scale", "classification", "conv"),
+    ),
 ):
     for transfer in (
         "Finetune",
