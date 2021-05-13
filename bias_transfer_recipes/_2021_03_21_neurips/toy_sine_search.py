@@ -75,15 +75,45 @@ for (
     layer_width,
     size_ratio,
 ) in product(
-    (0.001, 0.01),  # gamma
-    (0.1, 0.2, 0.3),  # dropout
-    (40, 100),  # ensemble members
-    (1e-1, 1e-5, 1e-10),  # eps
-    (0.05, 0.01, 0.1),  # amplitude delta
-    (True, False),  # phase random
-    (3, 4),  # num layers
-    (40, 100),  # hidden size
-    ((2000, 1, 400), (200, 40, 10)),  # (size, samples per fct, batch-size)
+    (
+            0.001,
+     # 0.01,
+     ),  # gamma
+    (
+     #        0.1,
+     0.2,
+     0.3,
+     ),  # dropout
+    (
+            40,
+            # 100,
+     ),  # ensemble members
+    (
+            1e-1,
+     1e-5,
+            1e-10
+     ),  # eps
+    (
+            # 0.05,
+     # 0.01,
+     0.1,
+     0.3,
+     0.5,
+     1.0,
+     ),  # amplitude delta
+    (True,
+     False
+     ),  # phase random
+    (3,
+     # 4
+     ),  # num layers
+    (#40,
+     100,),  # hidden size
+    (
+            # (2000, 1, 400),
+            # (200, 40, 10),
+     (500, 40, 10),
+     ),  # (size, samples per fct, batch-size)
 ):
     phase_delta = amplitude_delta if phase_random else 0.0
 
