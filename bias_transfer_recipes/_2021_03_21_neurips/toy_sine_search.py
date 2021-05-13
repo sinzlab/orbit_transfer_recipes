@@ -83,10 +83,11 @@ for (
      #        0.1,
      0.2,
      0.3,
+     0.5,
      ),  # dropout
     (
             40,
-            # 100,
+            100,
      ),  # ensemble members
     (
             1e-1,
@@ -100,6 +101,7 @@ for (
      0.3,
      0.5,
      1.0,
+     2.0,
      ),  # amplitude delta
     (True,
      False
