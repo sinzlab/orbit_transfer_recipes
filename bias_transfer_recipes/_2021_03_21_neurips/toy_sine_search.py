@@ -109,7 +109,7 @@ for (
     ),  # phase delta
     (
         #3,
-        4
+        4,
     ),  # num layers
     (80,),  # 40,  # hidden size
     (
