@@ -80,16 +80,19 @@ for (
         # 0.01,
     ),  # gamma
     (
-        #        0.1,
+               0.1,
         0.2,
         0.3,
         0.5,
     ),  # dropout
     (
         40,
-        100,
+        # 100,
     ),  # ensemble members
-    (1e-1, 1e-5, 1e-10),  # eps
+    (1e-1,
+     1e-5,
+     1e-10
+     ),  # eps
     (
         # 0.05,
         # 0.01,
@@ -117,8 +120,8 @@ for (
         # (200, 40, 10),
         # (500, 40, 10),
         (40, 400, 200),
-        (100, 80, 200),
-        (300, 40, 200),
+        (100, 100, 200),
+        (300, 50, 200),
     ),  # (size, samples per fct, batch-size)
 ):
     phase_delta = amplitude_delta if phase_random else 0.0
