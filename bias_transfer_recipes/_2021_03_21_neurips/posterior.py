@@ -66,7 +66,7 @@ class DataGeneratorRegression(DataGenerationMixin, Regression):
         super(DataGeneratorRegression, self).__init__(**kwargs)
 
 
-seed = 42
+seed = 8
 for environment in (
     (
         ("clean", "classification", "mlp"),
@@ -89,24 +89,30 @@ for environment in (
         ("scale", "classification", "mlp"),
     ),
 ):
-    for transfer, alphas, resets in (
+    for transfer, gammas, resets in (
         (
             "ELRG L2-SP",
-            (1.0,),
-            ("",),
+            (1.0, 10.0, 0.1, 5.0, 2.0),
+            ("", "all"),
         ),
-        (
-            "MF L2-SP",
-            (1.0,),
-            ("",),
-        ),
-        (
-            "VCL",
-            (1.0,),
-            ("",),
-        ),
+        # (
+        #     "MF L2-SP",
+        #     (1.0,
+        #      # 10.0, 0.1,5.0, 2.0
+        #      ),
+        #     ("",
+        #      # ,"all"
+        #      ),
+        # ),
+        # (
+        #     "VCL",
+        #     (1.0,),
+        #     ("",
+        #      # "all"
+        #      ),
+        # ),
     ):
-        for alpha in alphas:
+        for gamma in gammas:
             for reset in resets:
                 experiments = []
                 softmax_temp = 1.0
@@ -118,7 +124,6 @@ for environment in (
                             "trainer": {
                                 "regularization": {
                                     "regularizer": "VCL",
-                                    "alpha": alpha,
                                 },
                             },
                         },
@@ -132,7 +137,6 @@ for environment in (
                                 "reset": reset,
                                 "regularization": {
                                     "regularizer": "VCL",
-                                    "alpha": alpha,
                                 },
                             },
                         },
@@ -143,7 +147,6 @@ for environment in (
                             "trainer": {
                                 "regularization": {
                                     "regularizer": "VCL",
-                                    "alpha": alpha,
                                 },
                             },
                         },
@@ -162,7 +165,7 @@ for environment in (
                                 "reset": reset,
                                 "regularization": {
                                     "regularizer": "ParamDistance",
-                                    "alpha": alpha,
+                                    "gamma": gamma,
                                     "ignore_layers": ("fc3",)
                                     if "regression" in environment[0][1]
                                     or "simclr" in environment[0][1]
@@ -179,21 +182,26 @@ for environment in (
                         {
                             "model": {
                                 "type": "lenet300-100-elrg",
-                                "alpha": None,
+                                "alpha": 1 / rank,
                                 "rank": rank,
+                                "train_var": False,
+                                "initial_var": 1e-12,
                             },
                             "trainer": {
                                 "regularization": {
                                     "regularizer": "ELRG",
-                                    "alpha": alpha,
+                                    "prior_var": 1.0,
+                                    "num_samples": 10,
                                 },
                             },
                         },
                         {
                             "model": {
                                 "type": "lenet300-100-elrg",
-                                "alpha": None,
+                                "alpha": 1 / rank,
                                 "rank": rank,
+                                "train_var": False,
+                                "initial_var": 1e-12,
                             },
                             "trainer": {
                                 "bayesian_to_deterministic": True,
@@ -209,7 +217,7 @@ for environment in (
                                 "reset": reset,
                                 "regularization": {
                                     "regularizer": "ParamDistance",
-                                    "alpha": alpha,
+                                    "gamma": gamma,
                                     "use_elrg_importance": True,
                                     "ignore_layers": ("fc3",)
                                     if "regression" in environment[0][1]
@@ -365,7 +373,7 @@ for environment in (
                 reset_string = "reset" if reset == "all" else ""
                 transfer_experiments[
                     Description(
-                        name=f"{transfer} {reset_string}: {alpha} ({environment[0][0]}->{environment[1][0]};{environment[2][0]})",
+                        name=f"{transfer} {reset_string}: {gamma} ({environment[0][0]}->{environment[1][0]};{environment[2][0]})",
                         seed=seed,
                     )
                 ] = TransferExperiment(experiments, update=transfer_settings[transfer])
