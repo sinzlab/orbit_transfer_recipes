@@ -108,17 +108,17 @@ for (
         math.pi,
     ),  # phase delta
     (
-        3,
-        # 4
+        #3,
+        4
     ),  # num layers
-    (100,),  # 40,  # hidden size
+    (80,),  # 40,  # hidden size
     (
         # (2000, 1, 400),
         # (200, 40, 10),
         # (500, 40, 10),
         (40, 400, 200),
         (100, 80, 200),
-        (1000, 40, 200),
+        (300, 40, 200),
     ),  # (size, samples per fct, batch-size)
 ):
     phase_delta = amplitude_delta if phase_random else 0.0
@@ -144,13 +144,13 @@ for (
             self.load_kwargs(**kwargs)
             self.type: str = "mlp"
             self.input_size: int = 1
-            self.output_size: int = 1
+            self.output_size: int = size_ratio[0]
             self.layer_size: int = layer_width
             self.num_layers: int = num_layers
             self.activation: str = "relu"
             super().__init__(**kwargs)
 
-    last_layer = "layers.6" if num_layers == 3 else "layers.9"
+    last_layer = "layers.6" if num_layers == 4 else "layers.9"
     reset = ""
     experiments = []
     transfer_settings = {
