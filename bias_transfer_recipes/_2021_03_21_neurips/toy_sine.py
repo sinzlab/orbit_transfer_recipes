@@ -17,15 +17,16 @@ transfer_experiments = {}
 class DatasetA(ToySineDatasetConfig):
     def __init__(self, **kwargs):
         self.load_kwargs(**kwargs)
-        self.batch_size = 400
-        self.size: int = 1000
+        self.batch_size = 100
+        self.size: int = 40
         self.valid_size = 0.05
         self.sine: dict = {
-            "amplitude": (1.0, 1.0),
-            "phase": (0.0, 2 * math.pi),
+            "amplitude": (0.5, 3.0),
+            "phase": (0.0, 0.0),
             "freq": (1, 1),
             "x_range": (-5.0, 10.0),
-            "samples_per_function": 1,
+            "samples_per_function": 400,
+            "multi_regression": True
         }
         super().__init__(**kwargs)
 
@@ -58,10 +59,10 @@ class SourceModel(ToySineModel):
         self.load_kwargs(**kwargs)
         self.type: str = "mlp"
         self.input_size: int = 1
-        self.output_size: int = 1
-        self.layer_size: int = 10
-        self.num_layers: int = 3
-        self.activation: str = "sin"
+        self.output_size: int = 40
+        self.layer_size: int = 40
+        self.num_layers: int = 4
+        self.activation: str = "relu"
         super().__init__(**kwargs)
 
 
@@ -163,7 +164,7 @@ for transfer in (
             },
             {
                 "model": {
-                    "get_intermediate_rep": {"layers.9": "layers.6"},
+                    "get_intermediate_rep": {"layers.6": "layers.6"},
                     # "add_custom_buffer": {"layers__9_cov_lambdas": (ensemble_members,)},
                     "dropout": 0.01,
                 },

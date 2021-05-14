@@ -76,46 +76,50 @@ for (
     size_ratio,
 ) in product(
     (
-            0.001,
-     # 0.01,
-     ),  # gamma
+        0.001,
+        # 0.01,
+    ),  # gamma
     (
-     #        0.1,
-     0.2,
-     0.3,
-     0.5,
-     ),  # dropout
+        #        0.1,
+        0.2,
+        0.3,
+        0.5,
+    ),  # dropout
     (
-            40,
-            100,
-     ),  # ensemble members
+        40,
+        100,
+    ),  # ensemble members
+    (1e-1, 1e-5, 1e-10),  # eps
     (
-            1e-1,
-     1e-5,
-            1e-10
-     ),  # eps
+        # 0.05,
+        # 0.01,
+            0.0,
+        0.1,
+        0.3,
+        0.5,
+        1.0,
+        2.0,
+    ),  # amplitude delta
+    ( 0.0,
+        0.1,
+        0.3,
+        0.5,
+        1.0,
+        math.pi,
+    ),  # phase delta
     (
-            # 0.05,
-     # 0.01,
-     0.1,
-     0.3,
-     0.5,
-     1.0,
-     2.0,
-     ),  # amplitude delta
-    (True,
-     False
-     ),  # phase random
-    (3,
-     # 4
-     ),  # num layers
-    (#40,
-     100,),  # hidden size
+        3,
+        # 4
+    ),  # num layers
+    (100,),  # 40,  # hidden size
     (
-            # (2000, 1, 400),
-            # (200, 40, 10),
-     (500, 40, 10),
-     ),  # (size, samples per fct, batch-size)
+        # (2000, 1, 400),
+        # (200, 40, 10),
+        # (500, 40, 10),
+        (40, 400, 200),
+        (100, 80, 200),
+        (1000, 40, 200),
+    ),  # (size, samples per fct, batch-size)
 ):
     phase_delta = amplitude_delta if phase_random else 0.0
 
@@ -131,6 +135,7 @@ for (
                 "freq": (1, 1),
                 "x_range": (-5.0, 10.0),
                 "samples_per_function": size_ratio[1],
+                "multi_regression": True,
             }
             super().__init__(**kwargs)
 
