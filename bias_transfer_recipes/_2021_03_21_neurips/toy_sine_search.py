@@ -144,7 +144,7 @@ for (
             self.load_kwargs(**kwargs)
             self.type: str = "mlp"
             self.input_size: int = 1
-            self.output_size: int = size_ratio[0]
+            self.output_size: int = 1
             self.layer_size: int = layer_width
             self.num_layers: int = num_layers
             self.activation: str = "relu"
@@ -162,6 +162,7 @@ for (
                 "model": {
                     "get_intermediate_rep": {last_layer: last_layer},
                     "dropout": dropout,
+                    "output_size": size_ratio[0],
                 },
                 "trainer": {
                     "save_representation": True,
