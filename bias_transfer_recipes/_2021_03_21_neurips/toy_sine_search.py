@@ -156,7 +156,9 @@ for (
     transfer_settings = {
         "FD-MC-Dropout-Cov": [
             {
-                "model": {"dropout": dropout},
+                "model": {"dropout": dropout,
+                          "output_size": size_ratio[0],
+                          },
             },
             {
                 "model": {
