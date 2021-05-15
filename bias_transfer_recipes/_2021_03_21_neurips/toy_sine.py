@@ -17,12 +17,12 @@ transfer_experiments = {}
 class DatasetA(ToySineDatasetConfig):
     def __init__(self, **kwargs):
         self.load_kwargs(**kwargs)
-        self.batch_size = 100
+        self.batch_size = 200
         self.size: int = 40
         self.valid_size = 0.05
         self.sine: dict = {
-            "amplitude": (0.5, 3.0),
-            "phase": (0.0, 0.0),
+            "amplitude": (-1.0, 3.0),
+            "phase": (-0.1, 0.1),
             "freq": (1, 1),
             "x_range": (-5.0, 10.0),
             "samples_per_function": 400,
@@ -60,7 +60,7 @@ class SourceModel(ToySineModel):
         self.type: str = "mlp"
         self.input_size: int = 1
         self.output_size: int = 40
-        self.layer_size: int = 40
+        self.layer_size: int = 80
         self.num_layers: int = 4
         self.activation: str = "relu"
         super().__init__(**kwargs)
@@ -69,12 +69,7 @@ class SourceModel(ToySineModel):
 class BaselineModel(ToySineModel):
     def __init__(self, **kwargs):
         self.load_kwargs(**kwargs)
-        self.type: str = "mlp"
-        self.input_size: int = 1
         self.output_size: int = 1
-        self.layer_size: int = 40
-        self.num_layers: int = 4
-        self.activation: str = "relu"
         super().__init__(**kwargs)
 
 class BaselineTrainer(TransferMixin, ToySineTrainerConfig):
@@ -86,7 +81,7 @@ class BaselineTrainer(TransferMixin, ToySineTrainerConfig):
             "lr": 0.001,
             "weight_decay": 0.001,
         }
-        self.max_iter = 1000
+        self.max_iter = 2000
         super().__init__(**kwargs)
 
 
@@ -123,6 +118,7 @@ for transfer in (
     experiments = []
     softmax_temp = 1.0
     ensemble_members = 40
+    use_ensembling = True
     rank = 2
     transfer_settings = {
         "L2": [
@@ -140,12 +136,12 @@ for transfer in (
         ],
         "FD-MC-Dropout-Cov": [
             {
-                "model": {"dropout": 0.2},
+                "model": {"dropout": 0.3},
             },
             {
                 "model": {
                     "get_intermediate_rep": {"layers.6": "layers.6"},
-                    "dropout": 0.2,
+                    "dropout": 0.3,
                 },
                 "trainer": {
                     "save_representation": True,
@@ -156,7 +152,7 @@ for transfer in (
                     "compute_covariance": {
                         "type": "full",
                         "precision": "double",
-                        "eps": 1e-1,
+                        "eps": 1e-10,
                         "n_components": ensemble_members,
                         "n_samples": ensemble_members,
                     },
@@ -178,7 +174,7 @@ for transfer in (
                         "decay_alpha": False,
                         "softmax_temp": softmax_temp,
                         "use_softmax": False,
-                        "cov_eps": 1e-1,
+                        "cov_eps": 1e-10,
                     },
                     "data_transfer": True,
                     "ignore_main_loss": gamma == -1,
@@ -509,6 +505,16 @@ for transfer in (
             seed=seed,
         )
     )
+    # if use_ensembling:
+    #     for i in range(ensemble_members):
+    #         experiments.append(
+    #             Experiment(
+    #                 dataset=DatasetA(),
+    #                 model=SourceModel(),
+    #                 trainer=BaselineTrainer(),
+    #                 seed=seed,
+    #             )
+    #         )
 
     # (Step 1.1: Data Generation)
     if transfer in (

@@ -47,7 +47,7 @@ class BaselineTrainer(TransferMixin, ToySineTrainerConfig):
             "lr": 0.001,
             "weight_decay": 0.001,
         }
-        self.max_iter = 2000
+        self.max_iter = 200
         super().__init__(**kwargs)
 
 
@@ -62,7 +62,7 @@ class DataGenerator(DataGenerationMixin, BaselineTrainer):
     fn = "bias_transfer.trainer.toy_regression_transfer"
 
 
-seed = 42
+seed = 43
 transfer = "FD-MC-Dropout-Cov"
 for (
     gamma,
@@ -70,7 +70,7 @@ for (
     ensemble_members,
     eps,
     amplitude_delta,
-    phase_random,
+    phase_delta,
     num_layers,
     layer_width,
     size_ratio,
@@ -80,38 +80,42 @@ for (
         # 0.01,
     ),  # gamma
     (
-               0.1,
+        0.0,
+        0.1,
         0.2,
         0.3,
         0.5,
     ),  # dropout
     (
+            10,
         40,
         # 100,
     ),  # ensemble members
-    (1e-1,
-     1e-5,
-     1e-10
-     ),  # eps
     (
-        # 0.05,
-        # 0.01,
-            0.0,
+        # 1e-1,
+        # 1e-5,
+        1e-10,
+    ),  # eps
+    (
+        0.05,
+        0.01,
+        0.0,
         0.1,
         0.3,
         0.5,
         1.0,
         2.0,
     ),  # amplitude delta
-    ( 0.0,
+    (  0.0,
         0.1,
         0.3,
         0.5,
         1.0,
+        2.0,
         math.pi,
     ),  # phase delta
     (
-        #3,
+        # 3,
         4,
     ),  # num layers
     (80,),  # 40,  # hidden size
@@ -120,11 +124,11 @@ for (
         # (200, 40, 10),
         # (500, 40, 10),
         (40, 400, 200),
-        (100, 100, 200),
-        (300, 50, 200),
+        # (80, 400, 200),
+        # (100, 100, 200),
+        # (300, 50, 200),
     ),  # (size, samples per fct, batch-size)
 ):
-    phase_delta = amplitude_delta if phase_random else 0.0
 
     class DatasetA(ToySineDatasetConfig):
         def __init__(self, **kwargs):
@@ -153,16 +157,23 @@ for (
             self.activation: str = "relu"
             super().__init__(**kwargs)
 
+    ensembling = (dropout == 0.0)
     last_layer = "layers.6" if num_layers == 4 else "layers.9"
     reset = ""
     experiments = []
     transfer_settings = {
-        "FD-MC-Dropout-Cov": [
-            {
-                "model": {"dropout": dropout,
-                          "output_size": size_ratio[0],
-                          },
-            },
+        "FD-MC-Dropout-Cov": (
+            [
+                {
+                    "model": {
+                        "dropout": dropout,
+                        "output_size": size_ratio[0],
+                    },
+                },
+            ]
+            * (ensemble_members if ensembling else 1)
+        )
+        + [
             {
                 "model": {
                     "get_intermediate_rep": {last_layer: last_layer},
@@ -187,7 +198,7 @@ for (
                 "model": {
                     "get_intermediate_rep": {last_layer: last_layer},
                     # "add_custom_buffer": {"layers__9_cov_lambdas": (ensemble_members,)},
-                    "dropout": 0.01,
+                    "dropout": 0.0,
                 },
                 "trainer": {
                     "max_iter": 300,
@@ -207,17 +218,33 @@ for (
             },
             {
                 "model": {
-                    "dropout": 0.01,
+                    "dropout": 0.0,
                 }
             },
         ],
     }
 
     # Step 1: Training on bias[0]
+    if ensembling:
+        for i in range(0, ensemble_members - 1):
+            experiments.append(
+                Experiment(
+                    dataset=DatasetA(),
+                    model=BaselineModel(
+                        add_buffer=tuple([f"ensemble_{j}" for j in range(i)])
+                    ),
+                    trainer=BaselineTrainer(ensemble_iteration=i, reset="all"),
+                    seed=seed + i,
+                )
+            )
     experiments.append(
         Experiment(
             dataset=DatasetA(),
-            model=BaselineModel(),
+            model=BaselineModel(
+                add_buffer=tuple([f"ensemble_{i}" for i in range(ensemble_members-1)])
+                if ensembling
+                else ()
+            ),
             trainer=BaselineTrainer(),
             seed=seed,
         )
@@ -241,7 +268,11 @@ for (
                     shuffle=False,
                     valid_size=0.0,
                 ),
-                model=BaselineModel(),
+                model=BaselineModel(
+                    add_buffer=tuple([f"ensemble_{i}" for i in range(ensemble_members-1)])
+                    if ensembling
+                    else ()
+                ),
                 trainer=DataGenerator(comment=f"Data Generation ({transfer})"),
                 seed=seed,
             )
@@ -290,7 +321,7 @@ for (
                     ensemble_members,
                     eps,
                     amplitude_delta,
-                    phase_random,
+                    phase_delta,
                     num_layers,
                     layer_width,
                     size_ratio,
@@ -299,3 +330,4 @@ for (
             seed=seed,
         )
     ] = TransferExperiment(experiments, update=transfer_settings[transfer])
+
