@@ -68,8 +68,7 @@ for (
     regularize_mean,
     (penultimate, marginalize_over_hidden),
     gamma,
-    dropout,
-    ensemble_members,
+    (dropout, ensemble_members),
     eps,
     noise,
     amplitude_delta,
@@ -102,26 +101,18 @@ for (
         0.01,
     ),  # gamma
     (
-        0.0,
-        0.1,
-        0.2,
-        0.3,
-        0.5,
-    ),  # dropout
-    (
-        40,
-        100,
-    ),  # ensemble members
+        (0.0, 5),
+        (0.1, 40),
+        (0.2, 40),
+        (0.3, 40),
+        (0.5, 40),
+    ),  # (dropout, ensemble_members)
     (
         # 1e-1,
         # 1e-5,
         1e-10,
     ),  # eps
-    (
-            0.0,
-      0.01,
-      0.05
-      ), # noise
+    (0.0, 0.01, 0.05),  # noise
     (
         # 0.05,
         # 0.01,
@@ -138,7 +129,8 @@ for (
         # 0.5,
         # 1.0,
         # 2.0,
-        math.pi/2,
+        math.pi
+        / 2,
     ),  # phase delta
     (
         "sin",
