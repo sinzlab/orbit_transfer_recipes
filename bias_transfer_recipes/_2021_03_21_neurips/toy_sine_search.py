@@ -47,7 +47,7 @@ class BaselineTrainer(TransferMixin, ToySineTrainerConfig):
             "lr": 0.001,
             "weight_decay": 0.001,
         }
-        self.max_iter = 200
+        self.max_iter = 2000
         super().__init__(**kwargs)
 
 
@@ -65,19 +65,41 @@ class DataGenerator(DataGenerationMixin, BaselineTrainer):
 seed = 43
 transfer = "FD-MC-Dropout-Cov"
 for (
+    regularize_mean,
+    (penultimate, marginalize_over_hidden),
     gamma,
     dropout,
     ensemble_members,
     eps,
+    noise,
     amplitude_delta,
     phase_delta,
+    activation,
     num_layers,
     layer_width,
     size_ratio,
 ) in product(
     (
+        True,
+        False,
+    ),  # regularize_mean
+    (
+        (
+            True,
+            True,
+        ),
+        (
+            False,
+            True,
+        ),
+        (
+            True,
+            False,
+        ),
+    ),  # (penultimate,marginalize_over_hidden)
+    (
         0.001,
-        # 0.01,
+        0.01,
     ),  # gamma
     (
         0.0,
@@ -87,9 +109,8 @@ for (
         0.5,
     ),  # dropout
     (
-            10,
         40,
-        # 100,
+        100,
     ),  # ensemble members
     (
         # 1e-1,
@@ -97,23 +118,32 @@ for (
         1e-10,
     ),  # eps
     (
-        0.05,
-        0.01,
-        0.0,
-        0.1,
-        0.3,
+            0.0,
+      0.01,
+      0.05
+      ), # noise
+    (
+        # 0.05,
+        # 0.01,
+        # 0.0,
+        # 0.1,
+        # 0.3,
         0.5,
-        1.0,
-        2.0,
+        # 1.0,
+        # 2.0,
     ),  # amplitude delta
-    (  0.0,
-        0.1,
-        0.3,
-        0.5,
-        1.0,
-        2.0,
-        math.pi,
+    (  # 0.0,
+        # 0.1,
+        # 0.3,
+        # 0.5,
+        # 1.0,
+        # 2.0,
+        math.pi/2,
     ),  # phase delta
+    (
+        "sin",
+        "relu",
+    ),  # activation
     (
         # 3,
         4,
@@ -138,11 +168,12 @@ for (
             self.valid_size = 0.05
             self.sine: dict = {
                 "amplitude": (1.0 - amplitude_delta, 1.0 + amplitude_delta),
-                "phase": (0.0 - phase_delta, 0.0 + phase_delta),
+                "phase": (math.pi - phase_delta, math.pi + phase_delta),
                 "freq": (1, 1),
                 "x_range": (-5.0, 10.0),
                 "samples_per_function": size_ratio[1],
                 "multi_regression": True,
+                "noise": noise,
             }
             super().__init__(**kwargs)
 
@@ -157,8 +188,9 @@ for (
             self.activation: str = "relu"
             super().__init__(**kwargs)
 
-    ensembling = (dropout == 0.0)
-    last_layer = "layers.6" if num_layers == 4 else "layers.9"
+    ensembling = dropout == 0.0
+    l = (3 + (num_layers - 2) * 3) if penultimate else (3 + (num_layers - 3) * 3)
+    readout_layer = f"layers.{l}"
     reset = ""
     experiments = []
     transfer_settings = {
@@ -168,6 +200,7 @@ for (
                     "model": {
                         "dropout": dropout,
                         "output_size": size_ratio[0],
+                        "activation": activation,
                     },
                 },
             ]
@@ -176,9 +209,10 @@ for (
         + [
             {
                 "model": {
-                    "get_intermediate_rep": {last_layer: last_layer},
+                    "get_intermediate_rep": {readout_layer: readout_layer},
                     "dropout": dropout,
                     "output_size": size_ratio[0],
+                    "activation": activation,
                 },
                 "trainer": {
                     "save_representation": True,
@@ -196,12 +230,12 @@ for (
             },
             {
                 "model": {
-                    "get_intermediate_rep": {last_layer: last_layer},
+                    "get_intermediate_rep": {readout_layer: readout_layer},
                     # "add_custom_buffer": {"layers__9_cov_lambdas": (ensemble_members,)},
                     "dropout": 0.0,
                 },
                 "trainer": {
-                    "max_iter": 300,
+                    "max_iter": 2000,
                     "reset": reset,
                     "single_input_stream": False,
                     "regularization": {
@@ -210,6 +244,8 @@ for (
                         "decay_alpha": False,
                         "use_softmax": False,
                         "cov_eps": eps,
+                        "marginalize_over_hidden": marginalize_over_hidden,
+                        "regularize_mean": regularize_mean,
                     },
                     "data_transfer": True,
                     "ignore_main_loss": gamma == -1,
@@ -241,7 +277,7 @@ for (
         Experiment(
             dataset=DatasetA(),
             model=BaselineModel(
-                add_buffer=tuple([f"ensemble_{i}" for i in range(ensemble_members-1)])
+                add_buffer=tuple([f"ensemble_{i}" for i in range(ensemble_members - 1)])
                 if ensembling
                 else ()
             ),
@@ -269,7 +305,9 @@ for (
                     valid_size=0.0,
                 ),
                 model=BaselineModel(
-                    add_buffer=tuple([f"ensemble_{i}" for i in range(ensemble_members-1)])
+                    add_buffer=tuple(
+                        [f"ensemble_{i}" for i in range(ensemble_members - 1)]
+                    )
                     if ensembling
                     else ()
                 ),
@@ -316,12 +354,17 @@ for (
             name=f"{transfer}"
             + str(
                 (
+                    regularize_mean,
+                    marginalize_over_hidden,
+                    penultimate,
                     gamma,
                     dropout,
                     ensemble_members,
                     eps,
+                    noise,
                     amplitude_delta,
                     phase_delta,
+                    activation,
                     num_layers,
                     layer_width,
                     size_ratio,
@@ -330,4 +373,3 @@ for (
             seed=seed,
         )
     ] = TransferExperiment(experiments, update=transfer_settings[transfer])
-
