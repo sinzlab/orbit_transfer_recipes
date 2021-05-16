@@ -121,16 +121,26 @@ for environment in (
     #     ("low_resource", "classification", "conv"),
     #     ("noise", "classification", "conv"),
     # ),
-        (
-                ("translation", "classification", "conv"),
-                ("clean", "classification", "lc"),
-                ("translation", "classification", "lc"),
-        ),
-        (
-                ("translation", "classification", "conv"),
-                ("clean", "classification", "fc"),
-                ("translation", "classification", "fc"),
-        ),
+    (
+        ("translation_positive", "classification", "conv"),
+        ("clean", "classification", "lc"),
+        ("translation", "classification", "lc"),
+    ),
+    (
+        ("translation_positive", "classification", "conv"),
+        ("clean", "classification", "fc"),
+        ("translation", "classification", "fc"),
+    ),
+    # (
+    #         ("translation", "classification", "conv"),
+    #         ("clean", "classification", "lc"),
+    #         ("translation", "classification", "lc"),
+    # ),
+    # (
+    #         ("translation", "classification", "conv"),
+    #         ("clean", "classification", "fc"),
+    #         ("translation", "classification", "fc"),
+    # ),
     # (
     #     ("clean", "classification", "conv"),
     #     ("clean", "classification", "lc"),
