@@ -25,7 +25,7 @@ class GeneratedDataset(Generated, BaselineDataset):
 class BaselineModel(MNISTTransferModel):
     def __init__(self, **kwargs):
         self.load_kwargs(**kwargs)
-        self.type: str = "lenet300-100"
+        self.type: str = "lenet5"
         self.coreset_size = 200
         super().__init__(**kwargs)
 
@@ -33,7 +33,7 @@ class BaselineModel(MNISTTransferModel):
 class BaselineTrainer(TransferMixin, Classification):
     def __init__(self, **kwargs):
         self.load_kwargs(**kwargs)
-        self.max_iter = 1
+        self.max_iter = 100
         self.patience = 1000
         super().__init__(**kwargs)
 
@@ -75,20 +75,18 @@ possible_settings = {
     "EWC": ((1.0, 0.1, 10.0, 5.0), (-1,), (-1,)),  # alpha
     "SynapticIntelligence": ((1.0, 0.1, 10.0, 5.0), (-1,), (-1,)),  # alpha
     "ELRG L2-SP": (
-        (1.0,),  # 0.1, 10.0, 0.01
-        (  # 1,
-            5,
-            # 10, 20
-        ),
-        (  # 1e-1,
-            # 1e-5,
+        (1.0, 0.1, 10.0, 0.01),
+        (1, 5, 10, 20),
+        (
+            1e-1,
+            1e-5,
             1e-12,
         ),
     ),  # alpha, rank, eps
-    "MF L2-SP": ((1.0,), (-1,), (-1,)),  # alpha
+    "MF L2-SP": ((1.0, 0.1, 10.0, 0.01), (-1,), (-1,)),  # alpha
 }
 
-seed = 42
+seed = 43
 for environment in (
     (
         ("clean", "classification", "conv"),
@@ -106,9 +104,9 @@ for environment in (
     #     ("translation", "classification", "mlp"),
     # ),
     (
-        ("scale", "split-classification 0-4", "fc"),
-        ("clean", "split-classification 5-9", "fc"),
-        ("scale", "classification", "fc"),
+        ("scale", "split-classification 0-4", "conv"),
+        ("clean", "split-classification 5-9", "conv"),
+        ("scale", "classification", "conv"),
     ),
 ):
     for transfer in (
@@ -117,7 +115,7 @@ for environment in (
         "EWC",
         "SynapticIntelligence",
         "ELRG L2-SP",
-        # "MF L2-SP",
+        "MF L2-SP",
         # "VCL",
     ):
         for settings in product(*possible_settings[transfer]):
@@ -198,9 +196,10 @@ for environment in (
                     },
                 ],
                 "MF L2-SP": [
+                    {},
                     {
                         "model": {
-                            "type": "lenet300-100-bayes",
+                            "type": "lenet5-bayes",
                         },
                         "trainer": {
                             "regularization": {
@@ -210,7 +209,7 @@ for environment in (
                     },
                     {
                         "model": {
-                            "type": "lenet300-100-bayes",
+                            "type": "lenet5-bayes",
                         },
                         "trainer": {
                             "bayesian_to_deterministic": True,
@@ -231,9 +230,6 @@ for environment in (
                                 else (),
                             },
                         },
-                    },
-                    {
-                        "model": {"type": "lenet300-100"},
                     },
                 ],
                 "ELRG L2-SP": [
@@ -299,6 +295,30 @@ for environment in (
             else:
                 split = ()
 
+            if (
+                transfer == "MF L2-SP"
+            ):  # Step 0: train in deterministic mode to get the prior
+                experiments.append(
+                    Experiment(
+                        dataset=BaselineDataset(
+                            bias=environment[0][0],
+                            convert_to_rgb=("color" in environment[1][0]),
+                            filter_classes=split,
+                            reduce_to_filtered_classes=False,
+                        ),
+                        model=BaselineModel(
+                            bias=environment[0][0],
+                            input_channels=3 if "color" in environment[1][0] else 1,
+                            get_intermediate_rep={"fc2": "fc2"}
+                            if environment[0][1] == "simclr"
+                            else {},
+                        ),
+                        trainer=trainer_config_cls(
+                            comment=f"MNIST-Transfer {environment[0][0]}",
+                        ),
+                        seed=seed,
+                    )
+                )
             # Step 1: Training on source_bias
             experiments.append(
                 Experiment(
