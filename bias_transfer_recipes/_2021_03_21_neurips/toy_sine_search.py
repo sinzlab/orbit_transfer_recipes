@@ -181,7 +181,7 @@ for (
             super().__init__(**kwargs)
 
     ensembling = dropout == 0.0
-    l = (3 + (num_layers - 2) * 3) if penultimate else (3 + (num_layers - 3) * 3)
+    l = (3 + (num_layers - 3) * 3) if penultimate else (3 + (num_layers - 2) * 3)
     readout_layer = f"layers.{l}"
     reset = ""
     experiments = []
