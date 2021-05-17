@@ -71,9 +71,17 @@ class DataGeneratorRegression(DataGenerationMixin, Regression):
 
 
 possible_settings = {
-    "Finetune": ((1.0,), (None,), (None,), (None,), (None,)),  # alpha
+    "Finetune": (
+        (1.0,),
+        (None,),
+        (None,),
+        (None,),
+        (None,),
+        (None,),
+    ),  # alpha
     "FROMP": (
         (0.01, 0.1, 1.0, 2.0, 10.0),
+        (None,),
         (None,),
         (None,),
         (None,),
@@ -81,7 +89,8 @@ possible_settings = {
     ),  # alpha
     "KnowledgeDistillation": (
         (-1, 0.01, 0.1, 1.0, 2.0, 10.0),  # alpha
-        (1.0, 10.0, 0.1, 100.0),  # softmax temp
+        (1.0, 10.0, 0.1),  # softmax temp
+        (None,),
         (None,),
         (None,),
         (None,),
@@ -92,30 +101,53 @@ possible_settings = {
         (None,),
         (None,),
         (None,),
+        (None,),
     ),
     "FD-MC-Dropout": (
         (0.1, 1.0),  # alpha
-        (True, False),  # use softmax
-        (0.1, 0.3, 0.5),  # dropout
-        (10, 100),  # ensemble members
+        ((0.0, 5), (0.1, 40), (0.3, 40), (0.5, 40)),  # dropout, ensemble_members
         (1e-10,),  # eps
+        (True, False),  # use softmax
+        (None,),
+        (None,),
     ),
     "FD-MC-Dropout-Cov": (
         (0.001, 0.1),  # alpha
-        (True, False),  # use softmax
-        (0.1, 0.3, 0.5),  # dropout
-        (10, 100),  # ensemble members
-        (1e-1, 1e-5, 1e-10),  # eps
+        (
+            (0.0, 5),
+            (0.1, 40),
+            # (0.3, 40), (0.5, 40)
+        ),  # dropout, ensemble_members
+        (1e-10,),  # eps
+        (True, False),  # reularize_mean
+        (
+            (True, True, False),
+            (
+                False,
+                True,
+                True,
+            ),
+            (
+                False,
+                True,
+                False,
+            ),
+            (
+                True,
+                False,
+                False,
+            ),
+        ),  # (penultimate,marginalize_over_hidden,softmax)
     ),
 }
 
 seed = 8
 for environment in (
-    # (
-    #     ("clean", "classification", "conv"),
-    #     ("color", "classification", "conv"),
-    #     ("color_shuffle", "classification", "conv"),
-    # ),
+    (
+        ("clean", "classification", "conv"),
+        ("color", "classification", "conv"),
+        ("color_shuffle", "classification", "conv"),
+    ),
     # (
     #     ("noise", "simclr", "conv"),
     #     ("low_resource", "classification", "conv"),
@@ -126,11 +158,11 @@ for environment in (
         ("clean", "classification", "lc"),
         ("translation", "classification", "lc"),
     ),
-    (
-        ("translation_positive", "classification", "conv"),
-        ("clean", "classification", "fc"),
-        ("translation", "classification", "fc"),
-    ),
+    # (
+    #     ("translation_positive", "classification", "conv"),
+    #     ("clean", "classification", "fc"),
+    #     ("translation", "classification", "fc"),
+    # ),
     # (
     #         ("translation", "classification", "conv"),
     #         ("clean", "classification", "lc"),
@@ -158,45 +190,51 @@ for environment in (
     # ),
 ):
     for transfer in (
-        "Finetune",
-        "FROMP",
-        "FD",
-        "FD-MC-Dropout",
+        # "Finetune",
+        # "FROMP",
+        # "FD",
+        # "FD-MC-Dropout",
         "FD-MC-Dropout-Cov",
-        "KnowledgeDistillation",
+        # "KnowledgeDistillation",
     ):
         for settings in product(*possible_settings[transfer]):
+            readout_layer = "fc2" if len(settings[4]) == 3 and settings[4][0] else "fc3"
+            ensembling = len(settings[1]) == 2 and settings[1][0] == 0.0
             alpha = settings[0]
             experiments = []
             transfer_settings = {
                 "Finetune": [],
                 "FD-MC-Dropout-Cov": [
                     {
-                        "model": {"dropout": settings[2]},
+                        "model": {"dropout": settings[1][0]},
                     },
+                ]
+                * (settings[1][1] if ensembling else 1)
+                + [
                     {
                         "model": {
-                            "get_intermediate_rep": {"fc3": "fc3"},
-                            "dropout": settings[2],
+                            "get_intermediate_rep": {readout_layer: readout_layer},
+                            "dropout": settings[1][0],
                         },
                         "trainer": {
                             "save_representation": True,
                             "save_input": True,
                             "data_transfer": True,
-                            "apply_softmax": settings[1],
+                            "apply_softmax": settings[4][2],
                             "softmax_temp": 1.0,
                             "compute_covariance": {
                                 "type": "full",
                                 "precision": "double",
-                                "eps": settings[4],
-                                "n_components": settings[3],
-                                "n_samples": settings[3],
+                                "eps": settings[2],
+                                "n_components": settings[1][1],
+                                "n_samples": settings[1][1],
+                                "ensembling": ensembling,
                             },
                         },
                     },
                     {
                         "model": {
-                            "get_intermediate_rep": {"fc3": "fc3"},
+                            "get_intermediate_rep": {readout_layer: readout_layer},
                             # "add_custom_buffer": {"fc3_cov_lambdas": (10,)},
                         },
                         "trainer": {
@@ -207,8 +245,10 @@ for environment in (
                                 "alpha": alpha if alpha != -1 else 1.0,
                                 "decay_alpha": False,
                                 "softmax_temp": 1.0,
-                                "use_softmax": settings[1],
-                                "cov_eps": settings[4],
+                                "use_softmax": settings[4][2],
+                                "cov_eps": settings[2],
+                                "marginalize_over_hidden": settings[4][1],
+                                "regularize_mean": settings[3],
                             },
                             "data_transfer": True,
                             "ignore_main_loss": alpha == -1,
@@ -377,6 +417,36 @@ for environment in (
                 split = ()
 
             # Step 1: Training on source_bias
+            if ensembling:
+                for i in range(0, settings[1][1] - 1):
+                    experiments.append(
+                        Experiment(
+                            dataset=BaselineDataset(
+                                bias=environment[0][0],
+                                convert_to_rgb=("color" in environment[1][0]),
+                                filter_classes=split,
+                                reduce_to_filtered_classes=False,
+                            ),
+                            model=BaselineModel(
+                                bias=environment[0][0],
+                                input_channels=3 if "color" in environment[1][0] else 1,
+                                type="lenet5",
+                                core_type=environment[0][2],
+                                get_intermediate_rep={"fc2": "fc2"}
+                                if environment[0][1] == "simclr"
+                                else {},
+                                add_buffer=tuple([f"ensemble_{j}" for j in range(i)]),
+                            ),
+                            trainer=trainer_config_cls(
+                                comment=f"MNIST-Transfer {environment[0][0]}",
+                                ensemble_iteration=i,
+                                reset="all"
+                            ),
+                            seed=seed + i + 1,
+                        )
+                    )
+
+            # Step 1: Training on source_bias
             experiments.append(
                 Experiment(
                     dataset=BaselineDataset(
@@ -393,9 +463,15 @@ for environment in (
                         get_intermediate_rep={"fc2": "fc2"}
                         if environment[0][1] == "simclr"
                         else {},
+                        add_buffer=tuple(
+                            [f"ensemble_{i}" for i in range(settings[1][1] - 1)]
+                        )
+                        if ensembling
+                        else (),
                     ),
                     trainer=trainer_config_cls(
-                        comment=f"MNIST-Transfer {environment[0][0]}"
+                        comment=f"MNIST-Transfer {environment[0][0]}",
+                        reset="all"
                     ),
                     seed=seed,
                 )
@@ -430,6 +506,11 @@ for environment in (
                             get_intermediate_rep={"fc2": "fc2"}
                             if environment[0][1] == "simclr"
                             else {},
+                            add_buffer=tuple(
+                                [f"ensemble_{i}" for i in range(settings[1][1] - 1)]
+                            )
+                            if ensembling
+                            else (),
                         ),
                         trainer=transfer_config_cls(
                             comment=f"MNIST Data Generation ({transfer}) {environment[0][0]}",

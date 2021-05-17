@@ -219,6 +219,7 @@ for (
                         "eps": eps,
                         "n_components": ensemble_members,
                         "n_samples": ensemble_members,
+                        "ensembling": ensembling,
                     },
                 },
             },
@@ -264,7 +265,7 @@ for (
                         add_buffer=tuple([f"ensemble_{j}" for j in range(i)])
                     ),
                     trainer=BaselineTrainer(ensemble_iteration=i, reset="all"),
-                    seed=seed + i,
+                    seed=seed + i + 1,
                 )
             )
     experiments.append(
@@ -275,7 +276,7 @@ for (
                 if ensembling
                 else ()
             ),
-            trainer=BaselineTrainer(),
+            trainer=BaselineTrainer(reset="all"),
             seed=seed,
         )
     )
