@@ -1,11 +1,11 @@
 {
   "default": {
     "bias_transfer": "c1af0a67762957fda76e94115a9782b339c62968",
-    "nntransfer": "73b2592a86bd7f690a34f962da89e13c6020af74",
+    "nntransfer": "bafb3e17a11ac6b5cf1413bf8af4bc276535f2df",
     "nnplayground": "51671056a81f0dfd18d9d8b262c294b334363a53",
     "nnfabrik": "4abb1e14b0b7ad75cb68109925887867eda0a355",
     "nnvision": "b6cb6d1fe5813d03787c56404d70ca5774c76b54",
-    "neuralpredictors": "98504878a26c6c3f5be0168653e336a8c5555d2c",
+    "neuralpredictors": "55ab90f1b6eab9532adc614148c07c8464fcde57",
     "pytorch_warmup": "2c4e51eff93233686c8108a75ec7a96ee1c6ea30"
   }
 }

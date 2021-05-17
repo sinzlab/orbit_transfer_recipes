@@ -33,7 +33,7 @@ class BaselineModel(MNISTTransferModel):
 class BaselineTrainer(TransferMixin, Classification):
     def __init__(self, **kwargs):
         self.load_kwargs(**kwargs)
-        self.max_iter = 100
+        self.max_iter = 1
         self.patience = 1000
         super().__init__(**kwargs)
 
@@ -75,9 +75,15 @@ possible_settings = {
     "EWC": ((1.0, 0.1, 10.0, 5.0), (-1,), (-1,)),  # alpha
     "SynapticIntelligence": ((1.0, 0.1, 10.0, 5.0), (-1,), (-1,)),  # alpha
     "ELRG L2-SP": (
-        (1.0, 0.1, 10.0, 0.01),
-        (1, 5, 10, 20),
-        (1e-1, 1e-5, 1e-12),
+        (1.0,),  # 0.1, 10.0, 0.01
+        (  # 1,
+            5,
+            # 10, 20
+        ),
+        (  # 1e-1,
+            # 1e-5,
+            1e-12,
+        ),
     ),  # alpha, rank, eps
     "MF L2-SP": ((1.0,), (-1,), (-1,)),  # alpha
 }
@@ -85,9 +91,9 @@ possible_settings = {
 seed = 42
 for environment in (
     (
-        ("clean", "classification", "fc"),
-        ("color", "classification", "fc"),
-        ("color_shuffle", "classification", "fc"),
+        ("clean", "classification", "conv"),
+        ("color", "classification", "conv"),
+        ("color_shuffle", "classification", "conv"),
     ),
     # (
     #     ("noise", "simclr", "conv"),
@@ -193,6 +199,9 @@ for environment in (
                 ],
                 "MF L2-SP": [
                     {
+                        "model": {
+                            "type": "lenet300-100-bayes",
+                        },
                         "trainer": {
                             "regularization": {
                                 "regularizer": "VCL",
@@ -200,6 +209,9 @@ for environment in (
                         },
                     },
                     {
+                        "model": {
+                            "type": "lenet300-100-bayes",
+                        },
                         "trainer": {
                             "bayesian_to_deterministic": True,
                             "reset_for_new_task": True,
@@ -207,7 +219,6 @@ for environment in (
                     },
                     {
                         "model": {
-                            "type": "lenet300-100",
                             "add_buffer": ("importance",),
                         },
                         "trainer": {
@@ -228,7 +239,7 @@ for environment in (
                 "ELRG L2-SP": [
                     {
                         "model": {
-                            "type": "lenet300-100-elrg",
+                            "type": "lenet5-elrg",
                             "alpha": 1 / settings[1],
                             "rank": settings[1],
                             "train_var": False,
@@ -244,7 +255,7 @@ for environment in (
                     },
                     {
                         "model": {
-                            "type": "lenet300-100-elrg",
+                            "type": "lenet5-elrg",
                             "alpha": 1 / settings[1],
                             "rank": settings[1],
                             "train_var": False,
