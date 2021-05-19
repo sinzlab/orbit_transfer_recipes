@@ -62,7 +62,7 @@ class DataGenerator(DataGenerationMixin, BaselineTrainer):
     fn = "bias_transfer.trainer.toy_regression_transfer"
 
 
-seed = 43
+seed = 8
 transfer = "FD-MC-Dropout-Cov"
 for (
     regularize_mean,
