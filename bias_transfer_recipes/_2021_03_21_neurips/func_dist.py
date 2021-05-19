@@ -208,12 +208,12 @@ for environment in (
     # ),
 ):
     for transfer in (
-        # "Finetune",
+        "Finetune",
         # "FROMP",
-        # "FD",
-        # "FD-MC-Dropout",
+        "FD",
+        "FD-MC-Dropout",
         "FD-MC-Dropout-Cov",
-        # "KnowledgeDistillation",
+        "KnowledgeDistillation",
     ):
         for settings in product(*possible_settings[transfer]):
             readout_layer = "fc2" if len(settings[4]) == 3 and settings[4][0] else "fc3"
