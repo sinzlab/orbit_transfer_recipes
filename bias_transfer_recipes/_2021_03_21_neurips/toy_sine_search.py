@@ -18,7 +18,7 @@ transfer_experiments = {}
 class DatasetB(ToySineDatasetConfig):
     def __init__(self, **kwargs):
         self.load_kwargs(**kwargs)
-        self.batch_size = 50
+        self.batch_size = 400
         self.size: int = 1
         self.sine: dict = {
             "amplitude": (2.0, 2.0),
@@ -97,24 +97,32 @@ for (
         ),
     ),  # (penultimate,marginalize_over_hidden)
     (
+        10,
+        100,
+        1000,
+        1e8,
+        1e-8,
         0.001,
         0.01,
+        0.1,
+        1.0,
     ),  # gamma
     (
         (0.0, 5),
-        (0.1, 40),
+        # (0.1, 5),
         (0.2, 40),
-        (0.3, 40),
-        (0.5, 40),
+        # (0.3, 40),
+        # (0.5, 40),
     ),  # (dropout, ensemble_members)
     (
         # 1e-1,
         # 1e-5,
-        1e-10,
+        1e-12,
     ),  # eps
-    (0.0, 0.01,
-     # 0.05
-     ),  # noise
+    (  # 0.0,
+        0.01,
+        # 0.05
+    ),  # noise
     (
         # 0.05,
         # 0.01,
@@ -136,7 +144,7 @@ for (
     ),  # phase delta
     (
         "sin",
-        "relu",
+        # "relu",
     ),  # activation
     (
         # 3,
@@ -148,6 +156,7 @@ for (
         # (200, 40, 10),
         # (500, 40, 10),
         (40, 400, 200),
+        # (1, 400, 200),
         # (80, 400, 200),
         # (100, 100, 200),
         # (300, 50, 200),
@@ -183,6 +192,7 @@ for (
             super().__init__(**kwargs)
 
     ensembling = dropout == 0.0
+    log_prob_loss = gamma == 1.0
     l = (3 + (num_layers - 3) * 3) if penultimate else (3 + (num_layers - 2) * 3)
     readout_layer = f"layers.{l}"
     reset = ""
@@ -241,10 +251,17 @@ for (
                         "cov_eps": eps,
                         "marginalize_over_hidden": marginalize_over_hidden,
                         "regularize_mean": regularize_mean,
+                        "add_determinant": log_prob_loss,
                     },
                     "data_transfer": True,
                     "ignore_main_loss": gamma == -1,
                     "optim_step_count": 2,
+                    "loss_functions": {"regression": "MSELikelihood" if log_prob_loss else "MSELoss"},
+                    "optimizer_options": {
+                        "amsgrad": True,
+                        "lr": 0.01,
+                        "weight_decay": 0.001,
+                    },
                 },
             },
             {
