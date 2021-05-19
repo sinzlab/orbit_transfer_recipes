@@ -216,8 +216,20 @@ for environment in (
         "KnowledgeDistillation",
     ):
         for settings in product(*possible_settings[transfer]):
-            readout_layer = "fc2" if len(settings[4]) == 3 and settings[4][0] else "fc3"
-            ensembling = len(settings[1]) == 2 and settings[1][0] == 0.0
+            if settings[4] and len(settings[4]) == 3:
+                readout_layer = "fc2" if settings[4][0] else "fc3"
+                marginalize_over_hidden, use_softmax = settings[4][1:]
+            else:
+                readout_layer, marginalize_over_hidden, use_softmax = (
+                    "fc3",
+                    False,
+                    False,
+                )
+            if isinstance(settings[1],tuple) and len(settings[1]) == 2:
+                ensemble_members, dropout = settings[1]
+            else:
+                ensemble_members, dropout = 1, -1
+            ensembling = dropout == 0.0
             alpha = settings[0]
             log_prob_loss = alpha == 1.0
             lr = settings[5]
@@ -226,28 +238,28 @@ for environment in (
                 "Finetune": [],
                 "FD-MC-Dropout-Cov": [
                     {
-                        "model": {"dropout": settings[1][0]},
+                        "model": {"dropout": dropout},
                     },
                 ]
-                * (settings[1][1] if ensembling else 1)
+                * (ensemble_members if ensembling else 1)
                 + [
                     {
                         "model": {
                             "get_intermediate_rep": {readout_layer: readout_layer},
-                            "dropout": settings[1][0],
+                            "dropout": dropout,
                         },
                         "trainer": {
                             "save_representation": True,
                             "save_input": True,
                             "data_transfer": True,
-                            "apply_softmax": settings[4][2],
+                            "apply_softmax": use_softmax,
                             "softmax_temp": 1.0,
                             "compute_covariance": {
                                 "type": "full",
                                 "precision": "double",
                                 "eps": settings[2],
-                                "n_components": settings[1][1],
-                                "n_samples": settings[1][1],
+                                "n_components": ensemble_members,
+                                "n_samples": ensemble_members,
                                 "ensembling": ensembling,
                             },
                         },
@@ -265,9 +277,9 @@ for environment in (
                                 "alpha": alpha if alpha != -1 else 1.0,
                                 "decay_alpha": False,
                                 "softmax_temp": 1.0,
-                                "use_softmax": settings[4][2],
+                                "use_softmax": use_softmax,
                                 "cov_eps": settings[2],
-                                "marginalize_over_hidden": settings[4][1],
+                                "marginalize_over_hidden": marginalize_over_hidden,
                                 "regularize_mean": settings[3],
                                 "add_determinant": log_prob_loss,
                             },
