@@ -77,7 +77,6 @@ possible_settings = {
         (None,),
         (None,),
         (None,),
-        (None,),
         (
             0.0003,
             0.001,
@@ -85,7 +84,6 @@ possible_settings = {
     ),  # alpha
     "FROMP": (
         (0.01, 0.1, 1.0, 2.0, 10.0),
-        (None,),
         (None,),
         (None,),
         (None,),
@@ -101,7 +99,6 @@ possible_settings = {
         (None,),
         (None,),
         (None,),
-        (None,),
         (
             0.0003,
             0.001,
@@ -110,7 +107,6 @@ possible_settings = {
     "FD": (
         (0.001, 0.01, 0.1, 1.0),  # alpha
         (True, False),  # use softmax
-        (None,),
         (None,),
         (None,),
         (None,),
@@ -124,7 +120,6 @@ possible_settings = {
         ((0.0, 5), (0.1, 40), (0.3, 40), (0.5, 40)),  # dropout, ensemble_members
         (1e-10,),  # eps
         (True, False),  # use softmax
-        (None,),
         (None,),
         (0.0003, 0.001, 0.01, 0.00001),  # lr
     ),
@@ -211,7 +206,7 @@ for environment in (
         "Finetune",
         # "FROMP",
         "FD",
-        "FD-MC-Dropout",
+        # "FD-MC-Dropout",
         "FD-MC-Dropout-Cov",
         "KnowledgeDistillation",
     ):
