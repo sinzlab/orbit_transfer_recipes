@@ -78,6 +78,10 @@ possible_settings = {
         (None,),
         (None,),
         (None,),
+        (
+            0.0003,
+            0.001,
+        ),  # lr
     ),  # alpha
     "FROMP": (
         (0.01, 0.1, 1.0, 2.0, 10.0),
@@ -86,6 +90,10 @@ possible_settings = {
         (None,),
         (None,),
         (None,),
+        (
+            0.0003,
+            0.001,
+        ),  # lr
     ),  # alpha
     "KnowledgeDistillation": (
         (-1, 0.01, 0.1, 1.0, 2.0, 10.0),  # alpha
@@ -94,6 +102,10 @@ possible_settings = {
         (None,),
         (None,),
         (None,),
+        (
+            0.0003,
+            0.001,
+        ),  # lr
     ),
     "FD": (
         (0.001, 0.01, 0.1, 1.0),  # alpha
@@ -102,6 +114,10 @@ possible_settings = {
         (None,),
         (None,),
         (None,),
+        (
+            0.0003,
+            0.001,
+        ),  # lr
     ),
     "FD-MC-Dropout": (
         (0.1, 1.0),  # alpha
@@ -110,15 +126,16 @@ possible_settings = {
         (True, False),  # use softmax
         (None,),
         (None,),
+        (0.0003, 0.001, 0.01, 0.00001),  # lr
     ),
     "FD-MC-Dropout-Cov": (
-        (0.001, 0.1),  # alpha
+        (0.001, 0.1, 1.0, 10.0, 1000.0, 1e-8),  # alpha
         (
             (0.0, 5),
             (0.1, 40),
             # (0.3, 40), (0.5, 40)
         ),  # dropout, ensemble_members
-        (1e-10,),  # eps
+        (1e-12,),  # eps
         (True, False),  # reularize_mean
         (
             (True, True, False),
@@ -138,16 +155,17 @@ possible_settings = {
                 False,
             ),
         ),  # (penultimate,marginalize_over_hidden,softmax)
+        (0.0003, 0.001, 0.01, 0.00001),  # lr
     ),
 }
 
-seed = 8
+seed = 9
 for environment in (
-    (
-        ("clean", "classification", "conv"),
-        ("color", "classification", "conv"),
-        ("color_shuffle", "classification", "conv"),
-    ),
+    # (
+    #     ("clean", "classification", "conv"),
+    #     ("color", "classification", "conv"),
+    #     ("color_shuffle", "classification", "conv"),
+    # ),
     # (
     #     ("noise", "simclr", "conv"),
     #     ("low_resource", "classification", "conv"),
@@ -156,7 +174,7 @@ for environment in (
     (
         ("translation_positive", "classification", "conv"),
         ("clean", "classification", "lc"),
-        ("translation", "classification", "lc"),
+        ("translation_negative", "classification", "lc"),
     ),
     # (
     #     ("translation_positive", "classification", "conv"),
@@ -201,6 +219,8 @@ for environment in (
             readout_layer = "fc2" if len(settings[4]) == 3 and settings[4][0] else "fc3"
             ensembling = len(settings[1]) == 2 and settings[1][0] == 0.0
             alpha = settings[0]
+            log_prob_loss = alpha == 1.0
+            lr = settings[5]
             experiments = []
             transfer_settings = {
                 "Finetune": [],
@@ -249,10 +269,20 @@ for environment in (
                                 "cov_eps": settings[2],
                                 "marginalize_over_hidden": settings[4][1],
                                 "regularize_mean": settings[3],
+                                "add_determinant": log_prob_loss,
+                            },
+                            "loss_functions": {
+                                "img_classification": "CELikelihood"
+                                if log_prob_loss
+                                else "CrossEntropyLoss"
                             },
                             "data_transfer": True,
                             "ignore_main_loss": alpha == -1,
                             "optim_step_count": 2 if alpha != -1 else 1,
+                            "optimizer_options": {
+                                "amsgrad": False,
+                                "lr": lr,
+                            },
                         },
                     },
                 ],
@@ -295,6 +325,10 @@ for environment in (
                             "data_transfer": True,
                             "ignore_main_loss": alpha == -1,
                             "optim_step_count": 2 if alpha != -1 else 1,
+                            "optimizer_options": {
+                                "amsgrad": False,
+                                "lr": lr,
+                            },
                         },
                     },
                 ],
@@ -328,6 +362,10 @@ for environment in (
                             "data_transfer": True,
                             "ignore_main_loss": alpha == -1,
                             "optim_step_count": 2 if alpha != -1 else 1,
+                            "optimizer_options": {
+                                "amsgrad": False,
+                                "lr": lr,
+                            },
                         },
                     },
                 ],
@@ -356,6 +394,10 @@ for environment in (
                             "data_transfer": True,
                             "ignore_main_loss": alpha == -1,
                             "optim_step_count": 2 if alpha != -1 else 1,
+                            "optimizer_options": {
+                                "amsgrad": False,
+                                "lr": lr,
+                            },
                         },
                     },
                 ],
@@ -440,7 +482,7 @@ for environment in (
                             trainer=trainer_config_cls(
                                 comment=f"MNIST-Transfer {environment[0][0]}",
                                 ensemble_iteration=i,
-                                reset="all"
+                                reset="all",
                             ),
                             seed=seed + i + 1,
                         )
@@ -470,8 +512,7 @@ for environment in (
                         else (),
                     ),
                     trainer=trainer_config_cls(
-                        comment=f"MNIST-Transfer {environment[0][0]}",
-                        reset="all"
+                        comment=f"MNIST-Transfer {environment[0][0]}", reset="all"
                     ),
                     seed=seed,
                 )

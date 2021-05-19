@@ -43,7 +43,7 @@ class BaselineTrainer(TransferMixin, ToySineTrainerConfig):
         self.load_kwargs(**kwargs)
         self.optimizer: str = "Adam"
         self.optimizer_options = {
-            "amsgrad": True,
+            "amsgrad": False,
             "lr": 0.001,
             "weight_decay": 0.001,
         }
@@ -258,7 +258,7 @@ for (
                     "optim_step_count": 2,
                     "loss_functions": {"regression": "MSELikelihood" if log_prob_loss else "MSELoss"},
                     "optimizer_options": {
-                        "amsgrad": True,
+                        "amsgrad": False,
                         "lr": 0.01,
                         "weight_decay": 0.001,
                     },
