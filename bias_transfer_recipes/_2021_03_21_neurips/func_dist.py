@@ -226,7 +226,7 @@ for environment in (
                     False,
                 )
             if isinstance(settings[1],tuple) and len(settings[1]) == 2:
-                ensemble_members, dropout = settings[1]
+                dropout, ensemble_members = settings[1]
             else:
                 ensemble_members, dropout = 1, -1
             ensembling = dropout == 0.0
