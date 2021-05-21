@@ -79,38 +79,38 @@ for (
     size_ratio,
 ) in product(
     (
-        True,
+        # True,
         False,
     ),  # regularize_mean
     (
-        (
-            True,
-            True,
-        ),
-        (
-            False,
-            True,
-        ),
+        # (
+        #     True,
+        #     True,
+        # ),
+        # (
+        #     False,
+        #     True,
+        # ),
         (
             True,
             False,
         ),
     ),  # (penultimate,marginalize_over_hidden)
     (
-        10,
-        100,
-        1000,
-        1e8,
-        1e-8,
-        0.001,
-        0.01,
-        0.1,
+        # 10,
+        # 100,
+        # 1000,
+        # 1e8,
+        # 1e-8,
+        # 0.001,
+        # 0.01,
+        # 0.1,
         1.0,
     ),  # gamma
     (
-        (0.0, 5),
+        (0.0, 10),
         # (0.1, 5),
-        (0.2, 40),
+        # (0.2, 40),
         # (0.3, 40),
         # (0.5, 40),
     ),  # (dropout, ensemble_members)
@@ -140,7 +140,7 @@ for (
         # 1.0,
         # 2.0,
         math.pi
-        / 2,
+        / 4,
     ),  # phase delta
     (
         "sin",
@@ -171,7 +171,7 @@ for (
             self.valid_size = 0.05
             self.sine: dict = {
                 "amplitude": (1.0 - amplitude_delta, 1.0 + amplitude_delta),
-                "phase": (math.pi - phase_delta, math.pi + phase_delta),
+                "phase": (math.pi/2 - phase_delta, math.pi/2 + phase_delta),
                 "freq": (1, 1),
                 "x_range": (-5.0, 10.0),
                 "samples_per_function": size_ratio[1],

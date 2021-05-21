@@ -27,7 +27,7 @@ class BaselineModel(MNISTTransferModel):
 class BaselineTrainer(TransferMixin, Classification):
     def __init__(self, **kwargs):
         self.load_kwargs(**kwargs)
-        self.max_iter = 100
+        self.max_iter = 1
         self.patience = 1000
         super().__init__(**kwargs)
 
@@ -39,7 +39,7 @@ class BaselineSimclrTrainer(SimclrMixin, BaselineTrainer):
 class BaselineRegressionTrainer(TransferMixin, Regression):
     def __init__(self, **kwargs):
         self.load_kwargs(**kwargs)
-        self.max_iter = 100
+        self.max_iter = 1
         self.patience = 1000
         self.readout_name = "fc3"
         self.loss_functions = {"regression": "MSELoss"}
@@ -126,7 +126,7 @@ possible_settings = {
     "FD-MC-Dropout-Cov": (
         (0.001, 0.1, 1.0, 10.0, 1000.0, 1e-8),  # alpha
         (
-            (0.0, 5),
+            # (0.0, 5),
             (0.1, 40),
             # (0.3, 40), (0.5, 40)
         ),  # dropout, ensemble_members
@@ -134,16 +134,16 @@ possible_settings = {
         (True, False),  # reularize_mean
         (
             (True, True, False),
-            (
-                False,
-                True,
-                True,
-            ),
-            (
-                False,
-                True,
-                False,
-            ),
+            # (
+            #     False,
+            #     True,
+            #     True,
+            # ),
+            # (
+            #     False,
+            #     True,
+            #     False,
+            # ),
             (
                 True,
                 False,
@@ -203,12 +203,12 @@ for environment in (
     # ),
 ):
     for transfer in (
-        "Finetune",
+        # "Finetune",
         # "FROMP",
-        "FD",
+        # "FD",
         # "FD-MC-Dropout",
         "FD-MC-Dropout-Cov",
-        "KnowledgeDistillation",
+        # "KnowledgeDistillation",
     ):
         for settings in product(*possible_settings[transfer]):
             if settings[4] and len(settings[4]) == 3:
