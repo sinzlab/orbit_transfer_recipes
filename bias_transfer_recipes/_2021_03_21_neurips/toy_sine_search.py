@@ -47,7 +47,7 @@ class BaselineTrainer(TransferMixin, ToySineTrainerConfig):
             "lr": 0.001,
             "weight_decay": 0.001,
         }
-        self.max_iter = 2000
+        self.max_iter = 1000
         super().__init__(**kwargs)
 
 
@@ -62,14 +62,14 @@ class DataGenerator(DataGenerationMixin, BaselineTrainer):
     fn = "bias_transfer.trainer.toy_regression_transfer"
 
 
-seed = 8
+seed = 11
 transfer = "FD-MC-Dropout-Cov"
 for (
     regularize_mean,
     (penultimate, marginalize_over_hidden),
     gamma,
     (dropout, ensemble_members),
-    eps,
+    log_var,
     noise,
     amplitude_delta,
     phase_delta,
@@ -79,22 +79,22 @@ for (
     size_ratio,
 ) in product(
     (
-        # True,
-        False,
+        True,
+        # False,
     ),  # regularize_mean
     (
-        # (
-        #     True,
-        #     True,
-        # ),
+        (
+            True,
+            True,
+        ),
         # (
         #     False,
         #     True,
         # ),
-        (
-            True,
-            False,
-        ),
+        # (
+        #     True,
+        #     False,
+        # ),
     ),  # (penultimate,marginalize_over_hidden)
     (
         # 10,
@@ -102,23 +102,29 @@ for (
         # 1000,
         # 1e8,
         # 1e-8,
+        # 1e-6,
+        # 0.000003,
         # 0.001,
         # 0.01,
         # 0.1,
+        # 2.0,
         1.0,
     ),  # gamma
     (
-        (0.0, 10),
+        # (0.0, 10),
         # (0.1, 5),
-        # (0.2, 40),
+        # (0.2, 10),
+        (0.2, 40),
         # (0.3, 40),
         # (0.5, 40),
     ),  # (dropout, ensemble_members)
     (
+        math.log(0.01**2),  # of course choosing the actual noise level is cheating, but it works :)
         # 1e-1,
-        # 1e-5,
-        1e-12,
-    ),  # eps
+        # 1e-4,
+        # 1e-12,
+        # 1.0,
+    ),  # log_var
     (  # 0.0,
         0.01,
         # 0.05
@@ -226,7 +232,6 @@ for (
                     "compute_covariance": {
                         "type": "full",
                         "precision": "double",
-                        "eps": eps,
                         "n_components": ensemble_members,
                         "n_samples": ensemble_members,
                         "ensembling": ensembling,
@@ -248,7 +253,8 @@ for (
                         "alpha": gamma if gamma != -1 else 1.0,
                         "decay_alpha": False,
                         "use_softmax": False,
-                        "cov_eps": eps,
+                        "log_var": log_var,
+                        "learn_log_var": True,
                         "marginalize_over_hidden": marginalize_over_hidden,
                         "regularize_mean": regularize_mean,
                         "add_determinant": log_prob_loss,
@@ -257,10 +263,11 @@ for (
                     "ignore_main_loss": gamma == -1,
                     "optim_step_count": 2,
                     "loss_functions": {"regression": "MSELikelihood" if log_prob_loss else "MSELoss"},
+                    "loss_function_options": {"regression": {"log_var": log_var} if log_prob_loss else {}},
                     "optimizer_options": {
                         "amsgrad": False,
                         "lr": 0.01,
-                        "weight_decay": 0.001,
+                        "weight_decay": 0.0001,
                     },
                 },
             },
@@ -372,7 +379,7 @@ for (
                     gamma,
                     dropout,
                     ensemble_members,
-                    eps,
+                    log_var,
                     noise,
                     amplitude_delta,
                     phase_delta,

@@ -8,6 +8,14 @@ from bias_transfer.configs import *
 
 transfer_experiments = {}
 
+from itertools import product, starmap
+from collections import namedtuple
+
+
+def named_product(**items):
+    Product = namedtuple("Product", items.keys())
+    return starmap(Product, product(*items.values()))
+
 
 class BaselineDataset(MNISTTransfer):
     def __init__(self, **kwargs):
@@ -71,68 +79,70 @@ class DataGeneratorRegression(DataGenerationMixin, Regression):
 
 
 possible_settings = {
-    "Finetune": (
-        (1.0,),
-        (None,),
-        (None,),
-        (None,),
-        (None,),
-        (
-            0.0003,
-            0.001,
-        ),  # lr
-    ),  # alpha
-    "FROMP": (
-        (0.01, 0.1, 1.0, 2.0, 10.0),
-        (None,),
-        (None,),
-        (None,),
-        (None,),
-        (
-            0.0003,
-            0.001,
-        ),  # lr
-    ),  # alpha
-    "KnowledgeDistillation": (
-        (-1, 0.01, 0.1, 1.0, 2.0, 10.0),  # alpha
-        (1.0, 10.0, 0.1),  # softmax temp
-        (None,),
-        (None,),
-        (None,),
-        (
-            0.0003,
-            0.001,
-        ),  # lr
-    ),
-    "FD": (
-        (0.001, 0.01, 0.1, 1.0),  # alpha
-        (True, False),  # use softmax
-        (None,),
-        (None,),
-        (None,),
-        (
-            0.0003,
-            0.001,
-        ),  # lr
-    ),
-    "FD-MC-Dropout": (
-        (0.1, 1.0),  # alpha
-        ((0.0, 5), (0.1, 40), (0.3, 40), (0.5, 40)),  # dropout, ensemble_members
-        (1e-10,),  # eps
-        (True, False),  # use softmax
-        (None,),
-        (0.0003, 0.001, 0.01, 0.00001),  # lr
-    ),
-    "FD-MC-Dropout-Cov": (
-        (0.001, 0.1, 1.0, 10.0, 1000.0, 1e-8),  # alpha
-        (
+    # "Finetune": (
+    #     (1.0,),
+    #     (None,),
+    #     (None,),
+    #     (None,),
+    #     (None,),
+    #     (
+    #         0.0003,
+    #         0.001,
+    #     ),  # lr
+    # ),  # alpha
+    # "FROMP": (
+    #     (0.01, 0.1, 1.0, 2.0, 10.0),
+    #     (None,),
+    #     (None,),
+    #     (None,),
+    #     (None,),
+    #     (
+    #         0.0003,
+    #         0.001,
+    #     ),  # lr
+    # ),  # alpha
+    # "KnowledgeDistillation": (
+    #     (-1, 0.01, 0.1, 1.0, 2.0, 10.0),  # alpha
+    #     (1.0, 10.0, 0.1),  # softmax temp
+    #     (None,),
+    #     (None,),
+    #     (None,),
+    #     (
+    #         0.0003,
+    #         0.001,
+    #     ),  # lr
+    # ),
+    # "FD": (
+    #     (0.001, 0.01, 0.1, 1.0),  # alpha
+    #     (True, False),  # use softmax
+    #     (None,),
+    #     (None,),
+    #     (None,),
+    #     (
+    #         0.0003,
+    #         0.001,
+    #     ),  # lr
+    # ),
+    # "FD-MC-Dropout": (
+    #     (0.1, 1.0),  # alpha
+    #     ((0.0, 5), (0.1, 40), (0.3, 40), (0.5, 40)),  # dropout, ensemble_members
+    #     (1e-10,),  # eps
+    #     (True, False),  # use softmax
+    #     (None,),
+    #     (0.0003, 0.001, 0.01, 0.00001),  # lr
+    # ),
+    "FD-MC-Dropout-Cov": {
+        "initial_std": (
+            1.0,
+            # 0.1, 0.01, 0.001, 0.0001
+        ),
+        "dropout__members": (
             # (0.0, 5),
             (0.1, 40),
             # (0.3, 40), (0.5, 40)
         ),  # dropout, ensemble_members
-        (1e-12,),  # eps
-        (True, False),  # reularize_mean
-        (
+        "regularize_mean": (True,),  # False  # reularize_mean
+        "penultimate__margin__softmax": (
             (True, True, False),
             # (
             #     False,
@@ -144,14 +154,17 @@ possible_settings = {
             #     True,
             #     False,
             # ),
-            (
-                True,
-                False,
-                False,
-            ),
+            # (
+            #     True,
+            #     False,
+            #     False,
+            # ),
         ),  # (penultimate,marginalize_over_hidden,softmax)
-        (0.0003, 0.001, 0.01, 0.00001),  # lr
-    ),
+        "lr": (
+            0.0003,
+            # 0.001, 0.01, 0.00001
+        ),  # lr
+    },
 }
 
 seed = 9
@@ -210,20 +223,25 @@ for environment in (
         "FD-MC-Dropout-Cov",
         # "KnowledgeDistillation",
     ):
-        for settings in product(*possible_settings[transfer]):
-            if settings[4] and len(settings[4]) == 3:
-                readout_layer = "fc2" if settings[4][0] else "fc3"
-                marginalize_over_hidden, use_softmax = settings[4][1:]
+        for settings in named_product(**possible_settings[transfer]):
+            print(settings)
+            if transfer in ("FD-MC-Dropout-Cov",):
+                readout_layer = (
+                    "fc2" if settings.penultimate__margin__softmax[0] else "fc3"
+                )
+                (
+                    marginalize_over_hidden,
+                    use_softmax,
+                ) = settings.penultimate__margin__softmax[1:]
+                dropout, ensemble_members = settings.dropout__members
             else:
                 readout_layer, marginalize_over_hidden, use_softmax = (
                     "fc3",
                     False,
                     False,
                 )
-            if isinstance(settings[1],tuple) and len(settings[1]) == 2:
-                dropout, ensemble_members = settings[1]
-            else:
                 ensemble_members, dropout = 1, -1
+
             ensembling = dropout == 0.0
             alpha = settings[0]
             log_prob_loss = alpha == 1.0
