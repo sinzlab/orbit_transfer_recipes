@@ -127,32 +127,38 @@ for environment in (
         (penultimate, marginalize_over_hidden, use_softmax),
         lr,
     ) in product(
-        (1.0, 0.1, 0.01, 0.001, 0.0001),  # intial std
         (
-            (0.0, 5),
-            (0.1, 10),
+                #1.0, 0.1,
+         0.01,
+         # 0.001, 0.0001
+         ),  # intial std
+        (
+            # (0.0, 5),
+            # (0.1, 10),
             (0.1, 40),
-            (0.3, 10),
-            (0.5, 10),
+            # (0.3, 10),
+            # (0.5, 10),
         ),  # dropout, ensemble_members
-        (True, False),  # reularize_mean
+        (True,
+         # False
+         ),  # reularize_mean
         (
-            (True, True, False),
+            # (True, True, False),
             (
                 False,
                 True,
                 True,
             ),
-            (
-                False,
-                True,
-                False,
-            ),
-            (
-                True,
-                False,
-                False,
-            ),
+            # (
+            #     False,
+            #     True,
+            #     False,
+            # ),
+            # (
+            #     True,
+            #     False,
+            #     False,
+            # ),
         ),  # (penultimate,marginalize_over_hidden,softmax)
         (0.0003,
          # 0.001, 0.01, 0.00001
