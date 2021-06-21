@@ -128,9 +128,9 @@ for environment in (
         lr,
     ) in product(
         (
-                # 1.0, 0.1,
+                1.0, 0.1,
          0.01,
-         # 0.001, 0.0001
+         0.001, 0.0001
          ),  # intial std
         (
             (0.0, 5),
@@ -143,22 +143,22 @@ for environment in (
          # False
          ),  # reularize_mean
         (
-            # (True, True, False),
+            (True, True, False),
             (
                 False,
                 True,
                 True,
             ),
-            # (
-            #     False,
-            #     True,
-            #     False,
-            # ),
-            # (
-            #     True,
-            #     False,
-            #     False,
-            # ),
+            (
+                False,
+                True,
+                False,
+            ),
+            (
+                True,
+                False,
+                False,
+            ),
         ),  # (penultimate,marginalize_over_hidden,softmax)
         (0.0003,
          # 0.001, 0.01, 0.00001
