@@ -89,21 +89,21 @@ for environment in (
         ("clean", "classification", "lc"),
         ("translation_negative", "classification", "lc"),
     ),
-    # (
-    #     ("translation_positive", "classification", "conv"),
-    #     ("clean", "classification", "fc"),
-    #     ("translation", "classification", "fc"),
-    # ),
+    (
+        ("translation_positive", "classification", "conv"),
+        ("clean", "classification", "fc"),
+        ("translation", "classification", "fc"),
+    ),
     # (
     #         ("translation", "classification", "conv"),
     #         ("clean", "classification", "lc"),
     #         ("translation", "classification", "lc"),
     # ),
-    # (
-    #         ("translation", "classification", "conv"),
-    #         ("clean", "classification", "fc"),
-    #         ("translation", "classification", "fc"),
-    # ),
+    (
+            ("translation", "classification", "conv"),
+            ("clean", "classification", "fc"),
+            ("translation", "classification", "fc"),
+    ),
     # (
     #     ("clean", "classification", "conv"),
     #     ("clean", "classification", "lc"),
@@ -130,7 +130,8 @@ for environment in (
         (
                 1.0, 0.1,
          0.01,
-         0.001, 0.0001
+         0.001, 0.0001,
+            0.000001
          ),  # intial std
         (
             (0.0, 5),
@@ -140,7 +141,7 @@ for environment in (
             (0.5, 10),
         ),  # dropout, ensemble_members
         (True,
-         # False
+         False
          ),  # reularize_mean
         (
             (True, True, False),
