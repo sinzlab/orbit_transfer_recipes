@@ -84,36 +84,41 @@ for environment in (
     #     ("low_resource", "classification", "conv"),
     #     ("noise", "classification", "conv"),
     # ),
-    (
-        ("translation_positive", "classification", "conv"),
-        ("clean", "classification", "lc"),
-        ("translation_negative", "classification", "lc"),
-    ),
+    # (
+    #     ("translation_positive", "classification", "conv"),
+    #     ("clean", "classification", "lc"),
+    #     ("translation_negative", "classification", "lc"),
+    # ),
     (
         ("translation_positive", "classification", "conv"),
         ("clean", "classification", "fc"),
-        ("translation", "classification", "fc"),
+        ("translation_negative", "classification", "fc"),
     ),
+    # (
+    #     ("translation_positive", "classification", "conv"),
+    #     ("clean", "classification", "fc"),
+    #     ("translation", "classification", "fc"),
+    # ),
     # (
     #         ("translation", "classification", "conv"),
     #         ("clean", "classification", "lc"),
     #         ("translation", "classification", "lc"),
     # ),
-    (
-            ("translation", "classification", "conv"),
-            ("clean", "classification", "fc"),
-            ("translation", "classification", "fc"),
-    ),
+    # (
+    #         ("translation", "classification", "conv"),
+    #         ("clean", "classification", "fc"),
+    #         ("translation", "classification", "fc"),
+    # ),
     # (
     #     ("clean", "classification", "conv"),
     #     ("clean", "classification", "lc"),
     #     ("translation", "classification", "lc"),
     # ),
-    # (
-    #     ("clean", "classification", "conv"),
-    #     ("clean", "classification", "fc"),
-    #     ("translation", "classification", "fc"),
-    # ),
+    (
+        ("clean", "classification", "conv"),
+        ("clean", "classification", "fc"),
+        ("translation", "classification", "fc"),
+    ),
     # (
     #     ("scale", "split-classification 0-4", "conv"),
     #     ("clean", "split-classification 5-9", "conv"),
@@ -124,15 +129,10 @@ for environment in (
         intial_std,
         (dropout, ensemble_members),
         regularize_mean,
-        (penultimate, marginalize_over_hidden, use_softmax),
+        (readout_layer, marginalize_over_hidden, use_softmax),
         lr,
     ) in product(
-        (
-                1.0, 0.1,
-         0.01,
-         0.001, 0.0001,
-            0.000001
-         ),  # intial std
+        (1.0, 0.1, 0.01, 0.001, 0.0001, 0.000001),  # intial std
         (
             (0.0, 5),
             (0.1, 10),
@@ -140,32 +140,20 @@ for environment in (
             (0.3, 10),
             (0.5, 10),
         ),  # dropout, ensemble_members
-        (True,
-         False
-         ),  # reularize_mean
+        (True, False),  # reularize_mean
         (
-            (True, True, False),
-            (
-                False,
-                True,
-                True,
-            ),
-            (
-                False,
-                True,
-                False,
-            ),
-            (
-                True,
-                False,
-                False,
-            ),
-        ),  # (penultimate,marginalize_over_hidden,softmax)
-        (0.0003,
-         # 0.001, 0.01, 0.00001
-         ),  # lr
+            ("conv2", True, False),
+            ("conv2", False, False),
+            ("fc2", True, False),
+            ("fc2", False, False),
+            ("fc3", True, True),
+            ("fc3", True, False),
+        ),  # (readout_layer,marginalize_over_hidden,softmax)
+        (
+            0.0003,
+            # 0.001, 0.01, 0.00001
+        ),  # lr
     ):
-        readout_layer = "fc2" if penultimate else "fc3"
         ensembling = dropout == 0.0
         log_prob_loss = True
         log_var = math.log(intial_std ** 2)
@@ -421,7 +409,7 @@ for environment in (
         )
         transfer_experiments[
             Description(
-                name=f"{transfer} ::: {intial_std},{dropout},{ensemble_members},{regularize_mean},{penultimate}, {marginalize_over_hidden},{use_softmax},{lr} \
+                name=f"{transfer} ::: {intial_std},{dropout},{ensemble_members},{regularize_mean},{readout_layer}, {marginalize_over_hidden},{use_softmax},{lr} \
                 ::: ({environment[0][0]}-{environment[0][2]}->{environment[1][0]}-{environment[1][2]};{environment[2][0]}-{environment[2][2]})",
                 seed=seed,
             )
