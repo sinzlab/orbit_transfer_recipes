@@ -132,18 +132,22 @@ for environment in (
         (readout_layer, marginalize_over_hidden, use_softmax),
         lr,
     ) in product(
-        (1.0, 0.1, 0.01, 0.001, 0.0001, 0.000001),  # intial std
+        (1.0,
+         0.1, 0.01, 0.001, 0.0001, 0.000001
+         ),  # intial std
         (
             (0.0, 5),
-            (0.1, 10),
+            (0.1, 2),
             (0.1, 40),
             (0.3, 10),
             (0.5, 10),
         ),  # dropout, ensemble_members
-        (True, False),  # reularize_mean
+        (True,
+         False
+         ),  # reularize_mean
         (
-            ("conv2", True, False),
-            ("conv2", False, False),
+            ("core_flatten", True, False),
+            ("core_flatten", False, False),
             ("fc2", True, False),
             ("fc2", False, False),
             ("fc3", True, True),
