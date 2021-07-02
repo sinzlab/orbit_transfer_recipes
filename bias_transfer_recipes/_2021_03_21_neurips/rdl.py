@@ -72,7 +72,7 @@ class DataGeneratorRegression(DataGenerationMixin, Regression):
 
 
 seed = 42
-transfer = "FD-MC-Dropout-Cov"
+transfer = "RDL"
 for environment in (
     # (
     #     ("clean", "classification", "conv"),
@@ -114,11 +114,11 @@ for environment in (
     #     ("clean", "classification", "lc"),
     #     ("translation", "classification", "lc"),
     # ),
-    (
-        ("clean", "classification", "conv"),
-        ("clean", "classification", "fc"),
-        ("translation", "classification", "fc"),
-    ),
+    # (
+    #     ("clean", "classification", "conv"),
+    #     ("clean", "classification", "fc"),
+    #     ("translation", "classification", "fc"),
+    # ),
     # (
     #     ("scale", "split-classification 0-4", "conv"),
     #     ("clean", "split-classification 5-9", "conv"),
@@ -126,10 +126,8 @@ for environment in (
     # ),
 ):
     for (
-        intial_std,
-        (dropout, ensemble_members),
-        regularize_mean,
-        (readout_layer, marginalize_over_hidden, use_softmax),
+        gamma,
+        (readout_layer,use_softmax),
         lr,
     ) in product(
         (1.0,
