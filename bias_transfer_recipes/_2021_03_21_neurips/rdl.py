@@ -114,11 +114,11 @@ for environment in (
     #     ("clean", "classification", "lc"),
     #     ("translation", "classification", "lc"),
     # ),
-    # (
-    #     ("clean", "classification", "conv"),
-    #     ("clean", "classification", "fc"),
-    #     ("translation", "classification", "fc"),
-    # ),
+    (
+        ("clean", "classification", "conv"),
+        ("clean", "classification", "fc"),
+        ("translation", "classification", "fc"),
+    ),
     # (
     #     ("scale", "split-classification 0-4", "conv"),
     #     ("clean", "split-classification 5-9", "conv"),
@@ -127,14 +127,13 @@ for environment in (
 ):
     for (gamma, (readout_layer, use_softmax), lr,) in product(
         (
-            1.0,
-            # 0.1, 0.01, 0.001, 0.0001, 0.000001
+            1.0, 10.0, 100.0, 0.1, 0.01
         ),  # gamma
         (
             ("core_flatten", False),
-            # ("fc2", False),
-            # # ("fc3", True),
-            # ("fc3", False),
+            ("fc2", False),
+            # ("fc3", True),
+            ("fc3", False),
         ),  # (readout_layer,marginalize_over_hidden,softmax)
         (
             0.0003,
@@ -156,6 +155,7 @@ for environment in (
                         "data_transfer": True,
                         "apply_softmax": use_softmax,
                         "softmax_temp": 1.0,
+                        "compute_covariance": {},
                     },
                 },
                 {
