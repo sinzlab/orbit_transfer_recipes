@@ -28,7 +28,7 @@ class BaselineModel(MNISTTransferModel):
 class BaselineTrainer(TransferMixin, Classification):
     def __init__(self, **kwargs):
         self.load_kwargs(**kwargs)
-        self.max_iter = 100
+        self.max_iter = 1
         self.patience = 1000
         super().__init__(**kwargs)
 
@@ -40,7 +40,7 @@ class BaselineSimclrTrainer(SimclrMixin, BaselineTrainer):
 class BaselineRegressionTrainer(TransferMixin, Regression):
     def __init__(self, **kwargs):
         self.load_kwargs(**kwargs)
-        self.max_iter = 100
+        self.max_iter = 1
         self.patience = 1000
         self.readout_name = "fc3"
         self.loss_functions = {"regression": "MSELoss"}
@@ -125,53 +125,30 @@ for environment in (
     #     ("scale", "classification", "conv"),
     # ),
 ):
-    for (
-        gamma,
-        (readout_layer,use_softmax),
-        lr,
-    ) in product(
-        (1.0,
-         0.1, 0.01, 0.001, 0.0001, 0.000001
-         ),  # intial std
+    for (gamma, (readout_layer, use_softmax), lr,) in product(
         (
-            (0.0, 5),
-            (0.1, 10),
-            # (0.1, 40),
-            (0.3, 10),
-            (0.5, 10),
-        ),  # dropout, ensemble_members
-        (True,
-         False
-         ),  # reularize_mean
+            1.0,
+            # 0.1, 0.01, 0.001, 0.0001, 0.000001
+        ),  # gamma
         (
-            ("core_flatten", True, False),
-            ("core_flatten", False, False),
-            ("fc2", True, False),
-            ("fc2", False, False),
-            ("fc3", True, True),
-            ("fc3", True, False),
+            ("core_flatten", False),
+            # ("fc2", False),
+            # # ("fc3", True),
+            # ("fc3", False),
         ),  # (readout_layer,marginalize_over_hidden,softmax)
         (
             0.0003,
             # 0.001, 0.01, 0.00001
         ),  # lr
     ):
-        ensembling = dropout == 0.0
-        log_prob_loss = True
-        log_var = math.log(intial_std ** 2)
+        log_prob_loss =False
         experiments = []
         transfer_settings = {
-            "FD-MC-Dropout-Cov": [
-                {
-                    "model": {"dropout": dropout},
-                },
-            ]
-            * (ensemble_members if ensembling else 1)
-            + [
+            "RDL": [
+                {},
                 {
                     "model": {
                         "get_intermediate_rep": {readout_layer: readout_layer},
-                        "dropout": dropout,
                     },
                     "trainer": {
                         "save_representation": True,
@@ -179,13 +156,6 @@ for environment in (
                         "data_transfer": True,
                         "apply_softmax": use_softmax,
                         "softmax_temp": 1.0,
-                        "compute_covariance": {
-                            "type": "full",
-                            "precision": "double",
-                            "n_components": ensemble_members,
-                            "n_samples": ensemble_members,
-                            "ensembling": ensembling,
-                        },
                     },
                 },
                 {
@@ -197,16 +167,11 @@ for environment in (
                         "reset": "all",
                         "single_input_stream": False,
                         "regularization": {
-                            "regularizer": "FunctionDistance",
-                            "alpha": 1.0,
+                            "regularizer": "RDL",
+                            "alpha":gamma,
                             "decay_alpha": False,
                             "softmax_temp": 1.0,
                             "use_softmax": use_softmax,
-                            "log_var": log_var,
-                            "learn_log_var": True,
-                            "marginalize_over_hidden": marginalize_over_hidden,
-                            "regularize_mean": regularize_mean,
-                            "add_determinant": log_prob_loss,
                         },
                         "loss_functions": {
                             "img_classification": "CELikelihood"
@@ -214,7 +179,7 @@ for environment in (
                             else "CrossEntropyLoss"
                         },
                         "loss_function_options": {
-                            "img_classification": {"log_var": log_var}
+                            "img_classification": {"log_var": 0.0}
                             if log_prob_loss
                             else {}
                         },
@@ -250,36 +215,6 @@ for environment in (
             split = ()
 
         # Step 1: Training on source_bias
-        if ensembling:
-            for i in range(0, ensemble_members - 1):
-                experiments.append(
-                    Experiment(
-                        dataset=BaselineDataset(
-                            bias=environment[0][0],
-                            convert_to_rgb=("color" in environment[1][0]),
-                            filter_classes=split,
-                            reduce_to_filtered_classes=False,
-                        ),
-                        model=BaselineModel(
-                            bias=environment[0][0],
-                            input_channels=3 if "color" in environment[1][0] else 1,
-                            type="lenet5",
-                            core_type=environment[0][2],
-                            get_intermediate_rep={"fc2": "fc2"}
-                            if environment[0][1] == "simclr"
-                            else {},
-                            add_buffer=tuple([f"ensemble_{j}" for j in range(i)]),
-                        ),
-                        trainer=trainer_config_cls(
-                            comment=f"MNIST-Transfer {environment[0][0]}",
-                            ensemble_iteration=i,
-                            reset="all",
-                        ),
-                        seed=seed + i + 1,
-                    )
-                )
-
-        # Step 1: Training on source_bias
         experiments.append(
             Experiment(
                 dataset=BaselineDataset(
@@ -296,11 +231,6 @@ for environment in (
                     get_intermediate_rep={"fc2": "fc2"}
                     if environment[0][1] == "simclr"
                     else {},
-                    add_buffer=tuple(
-                        [f"ensemble_{i}" for i in range(ensemble_members - 1)]
-                    )
-                    if ensembling
-                    else (),
                 ),
                 trainer=trainer_config_cls(
                     comment=f"MNIST-Transfer {environment[0][0]}", reset="all"
@@ -338,11 +268,6 @@ for environment in (
                         get_intermediate_rep={"fc2": "fc2"}
                         if environment[0][1] == "simclr"
                         else {},
-                        add_buffer=tuple(
-                            [f"ensemble_{i}" for i in range(ensemble_members - 1)]
-                        )
-                        if ensembling
-                        else (),
                     ),
                     trainer=transfer_config_cls(
                         comment=f"MNIST Data Generation ({transfer}) {environment[0][0]}",
@@ -411,7 +336,7 @@ for environment in (
         )
         transfer_experiments[
             Description(
-                name=f"{transfer} ::: {intial_std},{dropout},{ensemble_members},{regularize_mean},{readout_layer}, {marginalize_over_hidden},{use_softmax},{lr} \
+                name=f"{transfer} ::: {gamma},{readout_layer},{use_softmax},{lr} \
                 ::: ({environment[0][0]}-{environment[0][2]}->{environment[1][0]}-{environment[1][2]};{environment[2][0]}-{environment[2][2]})",
                 seed=seed,
             )
