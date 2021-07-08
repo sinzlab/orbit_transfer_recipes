@@ -28,7 +28,7 @@ class BaselineModel(MNISTTransferModel):
 class BaselineTrainer(TransferMixin, Classification):
     def __init__(self, **kwargs):
         self.load_kwargs(**kwargs)
-        self.max_iter = 1
+        self.max_iter = 100
         self.patience = 1000
         super().__init__(**kwargs)
 
@@ -40,7 +40,7 @@ class BaselineSimclrTrainer(SimclrMixin, BaselineTrainer):
 class BaselineRegressionTrainer(TransferMixin, Regression):
     def __init__(self, **kwargs):
         self.load_kwargs(**kwargs)
-        self.max_iter = 1
+        self.max_iter = 100
         self.patience = 1000
         self.readout_name = "fc3"
         self.loss_functions = {"regression": "MSELoss"}
