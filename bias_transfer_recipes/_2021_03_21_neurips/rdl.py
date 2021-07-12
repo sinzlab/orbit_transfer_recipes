@@ -89,11 +89,11 @@ for environment in (
     #     ("clean", "classification", "lc"),
     #     ("translation_negative", "classification", "lc"),
     # ),
-    (
-        ("translation_positive", "classification", "conv"),
-        ("clean", "classification", "fc"),
-        ("translation_negative", "classification", "fc"),
-    ),
+    # (
+    #     ("translation_positive", "classification", "conv"),
+    #     ("clean", "classification", "fc"),
+    #     ("translation_negative", "classification", "fc"),
+    # ),
     # (
     #     ("translation_positive", "classification", "conv"),
     #     ("clean", "classification", "fc"),
@@ -125,10 +125,9 @@ for environment in (
     #     ("scale", "classification", "conv"),
     # ),
 ):
-    for (gamma, (readout_layer, use_softmax), lr,) in product(
-        (
-            1.0, 10.0, 100.0, 0.1, 0.01
-        ),  # gamma
+    for (dataset_sub_cls, gamma, (readout_layer, use_softmax), lr,) in product(
+        ("MNIST", "FashionMNIST"),
+        (1.0, 10.0, 100.0, 0.1, 0.01),  # gamma
         (
             ("core_flatten", False),
             ("fc2", False),
@@ -140,7 +139,7 @@ for environment in (
             # 0.001, 0.01, 0.00001
         ),  # lr
     ):
-        log_prob_loss =False
+        log_prob_loss = False
         experiments = []
         transfer_settings = {
             "RDL": [
@@ -168,7 +167,7 @@ for environment in (
                         "single_input_stream": False,
                         "regularization": {
                             "regularizer": "RDL",
-                            "alpha":gamma,
+                            "alpha": gamma,
                             "decay_alpha": False,
                             "softmax_temp": 1.0,
                             "use_softmax": use_softmax,
@@ -222,6 +221,7 @@ for environment in (
                     convert_to_rgb=("color" in environment[1][0]),
                     filter_classes=split,
                     reduce_to_filtered_classes=False,
+                    dataset_sub_cls=dataset_sub_cls,
                 ),
                 model=BaselineModel(
                     bias=environment[0][0],
@@ -259,6 +259,7 @@ for environment in (
                         convert_to_rgb=("color" in environment[1][0]),
                         filter_classes=split,
                         reduce_to_filtered_classes=False,
+                        dataset_sub_cls=dataset_sub_cls,
                     ),
                     model=BaselineModel(
                         bias=environment[0][0],
@@ -302,6 +303,7 @@ for environment in (
                     bias=environment[1][0],
                     filter_classes=split,
                     reduce_to_filtered_classes=False,
+                    dataset_sub_cls=dataset_sub_cls,
                 ),
                 model=BaselineModel(
                     bias=environment[1][0],
@@ -320,6 +322,7 @@ for environment in (
             Experiment(
                 dataset=BaselineDataset(
                     bias=environment[2][0],
+                    dataset_sub_cls=dataset_sub_cls,
                 ),
                 model=BaselineModel(
                     bias=environment[2][0],
@@ -336,7 +339,7 @@ for environment in (
         )
         transfer_experiments[
             Description(
-                name=f"{transfer} ::: {gamma},{readout_layer},{use_softmax},{lr} \
+                name=f"{transfer} :::{dataset_sub_cls}  {gamma},{readout_layer},{use_softmax},{lr} \
                 ::: ({environment[0][0]}-{environment[0][2]}->{environment[1][0]}-{environment[1][2]};{environment[2][0]}-{environment[2][2]})",
                 seed=seed,
             )

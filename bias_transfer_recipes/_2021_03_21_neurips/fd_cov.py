@@ -89,11 +89,11 @@ for environment in (
     #     ("clean", "classification", "lc"),
     #     ("translation_negative", "classification", "lc"),
     # ),
-    (
-        ("translation_positive", "classification", "conv"),
-        ("clean", "classification", "fc"),
-        ("translation_negative", "classification", "fc"),
-    ),
+    # (
+    #     ("translation_positive", "classification", "conv"),
+    #     ("clean", "classification", "fc"),
+    #     ("translation_negative", "classification", "fc"),
+    # ),
     # (
     #     ("translation_positive", "classification", "conv"),
     #     ("clean", "classification", "fc"),
@@ -126,32 +126,36 @@ for environment in (
     # ),
 ):
     for (
+        dataset_sub_cls,
+        covariance,
         intial_std,
         (dropout, ensemble_members),
         regularize_mean,
         (readout_layer, marginalize_over_hidden, use_softmax),
         lr,
     ) in product(
-        (1.0,
-         0.1, 0.01, 0.001, 0.0001, 0.000001
-         ),  # intial std
+        ("MNIST", "FashionMNIST"),
+        ("full", "diagonal", ""),
+        (1.0, 0.1, 0.01, 0.000001),  # intial std
         (
             (0.0, 5),
             (0.1, 10),
             # (0.1, 40),
-            (0.3, 10),
-            (0.5, 10),
+            # (0.3, 10),
+            # (0.5, 2),
         ),  # dropout, ensemble_members
-        (True,
-         False
-         ),  # reularize_mean
         (
-            ("core_flatten", True, False),
+            True,
+            # False
+        ),  # reularize_mean
+        (
+            # ("core_flatten", True, False),
             ("core_flatten", False, False),
-            ("fc2", True, False),
+            # ("fc2", True, False),
             ("fc2", False, False),
-            ("fc3", True, True),
-            ("fc3", True, False),
+            # ("fc3", True, True),
+            # ("fc3", True, False),
+            ("fc3", False, False),
         ),  # (readout_layer,marginalize_over_hidden,softmax)
         (
             0.0003,
@@ -182,7 +186,6 @@ for environment in (
                         "apply_softmax": use_softmax,
                         "softmax_temp": 1.0,
                         "compute_covariance": {
-                            "type": "full",
                             "precision": "double",
                             "n_components": ensemble_members,
                             "n_samples": ensemble_members,
@@ -200,6 +203,7 @@ for environment in (
                         "single_input_stream": False,
                         "regularization": {
                             "regularizer": "FunctionDistance",
+                            "mode": covariance,
                             "alpha": 1.0,
                             "decay_alpha": False,
                             "softmax_temp": 1.0,
@@ -261,6 +265,7 @@ for environment in (
                             convert_to_rgb=("color" in environment[1][0]),
                             filter_classes=split,
                             reduce_to_filtered_classes=False,
+                            dataset_sub_cls=dataset_sub_cls,
                         ),
                         model=BaselineModel(
                             bias=environment[0][0],
@@ -289,6 +294,7 @@ for environment in (
                     convert_to_rgb=("color" in environment[1][0]),
                     filter_classes=split,
                     reduce_to_filtered_classes=False,
+                    dataset_sub_cls=dataset_sub_cls,
                 ),
                 model=BaselineModel(
                     bias=environment[0][0],
@@ -331,6 +337,7 @@ for environment in (
                         convert_to_rgb=("color" in environment[1][0]),
                         filter_classes=split,
                         reduce_to_filtered_classes=False,
+                        dataset_sub_cls=dataset_sub_cls,
                     ),
                     model=BaselineModel(
                         bias=environment[0][0],
@@ -379,6 +386,7 @@ for environment in (
                     bias=environment[1][0],
                     filter_classes=split,
                     reduce_to_filtered_classes=False,
+                    dataset_sub_cls=dataset_sub_cls,
                 ),
                 model=BaselineModel(
                     bias=environment[1][0],
@@ -397,6 +405,7 @@ for environment in (
             Experiment(
                 dataset=BaselineDataset(
                     bias=environment[2][0],
+                    dataset_sub_cls=dataset_sub_cls,
                 ),
                 model=BaselineModel(
                     bias=environment[2][0],
@@ -413,7 +422,7 @@ for environment in (
         )
         transfer_experiments[
             Description(
-                name=f"{transfer} ::: {intial_std},{dropout},{ensemble_members},{regularize_mean},{readout_layer}, {marginalize_over_hidden},{use_softmax},{lr} \
+                name=f"{transfer} :::{dataset_sub_cls} {covariance},{intial_std},{dropout},{ensemble_members},{regularize_mean},{readout_layer}, {marginalize_over_hidden},{use_softmax},{lr} \
                 ::: ({environment[0][0]}-{environment[0][2]}->{environment[1][0]}-{environment[1][2]};{environment[2][0]}-{environment[2][2]})",
                 seed=seed,
             )

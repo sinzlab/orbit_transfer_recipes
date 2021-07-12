@@ -84,16 +84,11 @@ for environment in (
     #     ("low_resource", "classification", "conv"),
     #     ("noise", "classification", "conv"),
     # ),
-    # (
-    #     ("translation_positive", "classification", "conv"),
-    #     ("clean", "classification", "lc"),
-    #     ("translation_negative", "classification", "lc"),
-    # ),
-    # (
-    #     ("translation_positive", "classification", "conv"),
-    #     ("clean", "classification", "fc"),
-    #     ("translation_negative", "classification", "fc"),
-    # ),
+    (
+        ("translation_positive", "classification", "conv"),
+        ("clean", "classification", "lc"),
+        ("translation_negative", "classification", "lc"),
+    ),
     # (
     #     ("translation_positive", "classification", "conv"),
     #     ("clean", "classification", "fc"),
@@ -114,55 +109,52 @@ for environment in (
     #     ("clean", "classification", "lc"),
     #     ("translation", "classification", "lc"),
     # ),
-    (
-        ("clean", "classification", "conv"),
-        ("clean", "classification", "fc"),
-        ("translation", "classification", "fc"),
-    ),
+    # (
+    #     ("clean", "classification", "conv"),
+    #     ("clean", "classification", "fc"),
+    #     ("translation", "classification", "fc"),
+    # ),
     # (
     #     ("scale", "split-classification 0-4", "conv"),
     #     ("clean", "split-classification 5-9", "conv"),
     #     ("scale", "classification", "conv"),
     # ),
 ):
-    for (dataset_sub_cls, gamma, softmax_temp, lr,) in product(
-        ("MNIST",
-         "FashionMNIST"
-         ),
-        (1.0,
-         10.0, 100.0, 0.1,
-         -1),  # gamma
-            (1.0,
-             0.1,10.0,100.0
-             ), #softmax_temp
+    for (
+        gamma,
+        softmax_temp,
+        lr,
+    ) in product(
+        (
+                -1,
+                0.01,
+                0.1, 1.0, 2.0, 10.0
+        ),  # gamma
+            (
+                    1.0,
+                    10.0,
+                    0.1
+             ),  # softmax temp
         (
             0.0003,
             # 0.001, 0.01, 0.00001
         ),  # lr
     ):
-        log_prob_loss = False
         experiments = []
         transfer_settings = {
             "KnowledgeDistillation": [
                 {},
                 {
-                    "model": {
-                        "get_intermediate_rep": {"fc3": "fc3"},
-                    },
+                    "model": {"get_intermediate_rep": {"fc3": "fc3"}},
                     "trainer": {
+                        "compute_covariance": {},
                         "save_representation": True,
                         "save_input": True,
                         "data_transfer": True,
-                        "apply_softmax": True,
-                        "softmax_temp": softmax_temp,
-                        "compute_covariance": {},
                     },
                 },
                 {
-                    "model": {
-                        "get_intermediate_rep": {"fc3": "fc3"},
-                        # "add_custom_buffer": {"fc3_cov_lambdas": (10,)},
-                    },
+                    "model": {"get_intermediate_rep": {"fc3": "fc3"}},
                     "trainer": {
                         "reset": "all",
                         "single_input_stream": False,
@@ -172,19 +164,9 @@ for environment in (
                             "decay_alpha": False,
                             "softmax_temp": softmax_temp,
                         },
-                        "loss_functions": {
-                            "img_classification": "CELikelihood"
-                            if log_prob_loss
-                            else "CrossEntropyLoss"
-                        },
-                        "loss_function_options": {
-                            "img_classification": {"log_var": 0.0}
-                            if log_prob_loss
-                            else {}
-                        },
                         "data_transfer": True,
-                        "ignore_main_loss": False,
-                        "optim_step_count": 2,
+                        "ignore_main_loss": gamma == -1,
+                        "optim_step_count": 2 if gamma != -1 else 1,
                         "optimizer_options": {
                             "amsgrad": False,
                             "lr": lr,
@@ -192,10 +174,11 @@ for environment in (
                     },
                 },
             ],
+
         }
 
         if transfer == "KnowledgeDistillation" and (
-            "regression" in environment[0][1] or "simclr" in environment[0][1]
+                "regression" in environment[0][1] or "simclr" in environment[0][1]
         ):
             continue
         if environment[0][1] == "simclr":
@@ -221,7 +204,6 @@ for environment in (
                     convert_to_rgb=("color" in environment[1][0]),
                     filter_classes=split,
                     reduce_to_filtered_classes=False,
-                    dataset_sub_cls=dataset_sub_cls,
                 ),
                 model=BaselineModel(
                     bias=environment[0][0],
@@ -259,7 +241,6 @@ for environment in (
                         convert_to_rgb=("color" in environment[1][0]),
                         filter_classes=split,
                         reduce_to_filtered_classes=False,
-                        dataset_sub_cls=dataset_sub_cls,
                     ),
                     model=BaselineModel(
                         bias=environment[0][0],
@@ -303,7 +284,6 @@ for environment in (
                     bias=environment[1][0],
                     filter_classes=split,
                     reduce_to_filtered_classes=False,
-                    dataset_sub_cls=dataset_sub_cls,
                 ),
                 model=BaselineModel(
                     bias=environment[1][0],
@@ -322,7 +302,6 @@ for environment in (
             Experiment(
                 dataset=BaselineDataset(
                     bias=environment[2][0],
-                    dataset_sub_cls=dataset_sub_cls,
                 ),
                 model=BaselineModel(
                     bias=environment[2][0],
@@ -339,7 +318,7 @@ for environment in (
         )
         transfer_experiments[
             Description(
-                name=f"{transfer} :::{dataset_sub_cls}  {gamma},{softmax_temp},{lr} \
+                name=f"{transfer} ::: {gamma},{softmax_temp},{lr} \
                 ::: ({environment[0][0]}-{environment[0][2]}->{environment[1][0]}-{environment[1][2]};{environment[2][0]}-{environment[2][2]})",
                 seed=seed,
             )

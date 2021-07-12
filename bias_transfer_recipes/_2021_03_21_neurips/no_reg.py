@@ -72,7 +72,7 @@ class DataGeneratorRegression(DataGenerationMixin, Regression):
 
 
 seed = 42
-transfer = "KnowledgeDistillation"
+transfer = "NoRegularization"
 for environment in (
     # (
     #     ("clean", "classification", "conv"),
@@ -125,16 +125,11 @@ for environment in (
     #     ("scale", "classification", "conv"),
     # ),
 ):
-    for (dataset_sub_cls, gamma, softmax_temp, lr,) in product(
-        ("MNIST",
-         "FashionMNIST"
-         ),
-        (1.0,
-         10.0, 100.0, 0.1,
-         -1),  # gamma
-            (1.0,
-             0.1,10.0,100.0
-             ), #softmax_temp
+    for (dataset_sub_cls, lr,) in product(
+        (
+            "MNIST",
+            "FashionMNIST"
+        ),
         (
             0.0003,
             # 0.001, 0.01, 0.00001
@@ -143,54 +138,10 @@ for environment in (
         log_prob_loss = False
         experiments = []
         transfer_settings = {
-            "KnowledgeDistillation": [
+            "NoRegularization": [
                 {},
-                {
-                    "model": {
-                        "get_intermediate_rep": {"fc3": "fc3"},
-                    },
-                    "trainer": {
-                        "save_representation": True,
-                        "save_input": True,
-                        "data_transfer": True,
-                        "apply_softmax": True,
-                        "softmax_temp": softmax_temp,
-                        "compute_covariance": {},
-                    },
-                },
-                {
-                    "model": {
-                        "get_intermediate_rep": {"fc3": "fc3"},
-                        # "add_custom_buffer": {"fc3_cov_lambdas": (10,)},
-                    },
-                    "trainer": {
-                        "reset": "all",
-                        "single_input_stream": False,
-                        "regularization": {
-                            "regularizer": "KnowledgeDistillation",
-                            "alpha": gamma if gamma != -1 else 1.0,
-                            "decay_alpha": False,
-                            "softmax_temp": softmax_temp,
-                        },
-                        "loss_functions": {
-                            "img_classification": "CELikelihood"
-                            if log_prob_loss
-                            else "CrossEntropyLoss"
-                        },
-                        "loss_function_options": {
-                            "img_classification": {"log_var": 0.0}
-                            if log_prob_loss
-                            else {}
-                        },
-                        "data_transfer": True,
-                        "ignore_main_loss": False,
-                        "optim_step_count": 2,
-                        "optimizer_options": {
-                            "amsgrad": False,
-                            "lr": lr,
-                        },
-                    },
-                },
+                {},
+                {},
             ],
         }
 
@@ -339,7 +290,7 @@ for environment in (
         )
         transfer_experiments[
             Description(
-                name=f"{transfer} :::{dataset_sub_cls}  {gamma},{softmax_temp},{lr} \
+                name=f"{transfer} :::{dataset_sub_cls}  {lr} \
                 ::: ({environment[0][0]}-{environment[0][2]}->{environment[1][0]}-{environment[1][2]};{environment[2][0]}-{environment[2][2]})",
                 seed=seed,
             )

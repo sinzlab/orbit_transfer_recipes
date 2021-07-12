@@ -79,18 +79,18 @@ for (
     size_ratio,
 ) in product(
     (
-        True,
-        # False,
+        # True,
+        False,
     ),  # regularize_mean
     (
-        (
-            True,
-            True,
-        ),
         # (
-        #     False,
+        #     True,
         #     True,
         # ),
+        (
+            False,
+            True,
+        ),
         # (
         #     True,
         #     False,
@@ -108,7 +108,8 @@ for (
         # 0.01,
         # 0.1,
         # 2.0,
-        1.0,
+        # 1.0,
+        0.0,
     ),  # gamma
     (
         # (0.0, 10),
