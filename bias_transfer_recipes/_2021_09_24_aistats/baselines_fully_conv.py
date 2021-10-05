@@ -69,7 +69,7 @@ teacher_exp = Experiment(
 for forward, lr, gamma, softmax_temp in product(
     ("kd", "kd_match"),
     (0.01, 0.001, 0.0001, 0.0005),
-    list(np.linspace(0.1, 1.0, 11)),
+    list(np.linspace(0.1, 1.0, 10)),
     (0.1, 1.0, 2.0, 5.0, 10.0, 20.0, 100.0),
 ):
     experiments = [teacher_exp]
@@ -124,7 +124,7 @@ for forward, lr, gamma in product(
 
 for lr, gamma, equiv, inv, id in product(
     (0.01, 0.001, 0.0001, 0.0005),
-    list(np.linspace(0.1, 1.0, 11)),
+    list(np.linspace(0.1, 1.0, 10)),
     (0.1, 1.0, 10.0),
     (0.1, 1.0, 10.0),
     (0.1, 1.0, 10.0),
