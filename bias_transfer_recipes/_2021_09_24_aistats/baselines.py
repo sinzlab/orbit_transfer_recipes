@@ -66,10 +66,14 @@ teacher_exp = Experiment(
     seed=seed,
 )
 
+
 for forward, lr, gamma, softmax_temp in product(
-    ("kd", "kd_match"),
+    (
+        "kd",
+        "kd_match",
+    ),
     (0.01, 0.001, 0.0001, 0.0005),
-    list(np.linspace(0.1, 1.1, 11)),
+    list(np.linspace(0.1, 1.0, 10)),
     (0.1, 1.0, 2.0, 5.0, 10.0, 20.0, 100.0),
 ):
     experiments = [teacher_exp]
@@ -90,15 +94,19 @@ for forward, lr, gamma, softmax_temp in product(
 
     transfer_experiments[
         Description(
-            name=f"{forward} T={softmax_temp} gamma={gamma} lr={lr}",
+            name=f"{forward}: gamma={gamma} T={softmax_temp} lr={lr}",
             seed=seed,
         )
     ] = TransferExperiment(experiments)
 
 for forward, lr, gamma in product(
-    ("rdl", "cka", "attention"),
+    (
+        "rdl",
+        "cka",
+        "attention",
+    ),
     (0.01, 0.001, 0.0001, 0.0005),
-    list(np.linspace(0.1, 1.1, 11)),
+    list(np.linspace(0.1, 1.0, 10)),
 ):
     experiments = [teacher_exp]
     experiments.append(
@@ -117,14 +125,14 @@ for forward, lr, gamma in product(
 
     transfer_experiments[
         Description(
-            name=f"{forward} gamma={gamma} lr={lr}",
+            name=f"{forward}: gamma={gamma} lr={lr}",
             seed=seed,
         )
     ] = TransferExperiment(experiments)
 
 for lr, gamma, equiv, inv, id in product(
     (0.01, 0.001, 0.0001, 0.0005),
-    list(np.linspace(0.1, 1.1, 11)),
+    list(np.linspace(0.1, 1.0, 10)),
     (0.1, 1.0, 10.0),
     (0.1, 1.0, 10.0),
     (0.1, 1.0, 10.0),
@@ -138,9 +146,9 @@ for lr, gamma, equiv, inv, id in product(
                 student_model=EquivTransferModel().to_dict(),
                 forward="equiv_learn",
                 learning_rate=lr,
-                equiv_factor=1.0,
-                invertible_factor=1.0,
-                identity_factor=1.0,
+                equiv_factor=equiv,
+                invertible_factor=inv,
+                identity_factor=id,
             ),
             seed=seed,
         )
@@ -161,7 +169,7 @@ for lr, gamma, equiv, inv, id in product(
 
     transfer_experiments[
         Description(
-            name=f"Equiv transfer gamma={gamma} lr={lr} equiv={equiv}, inv={inv} id={id}",
+            name=f"Equiv transfer: gamma={gamma} lr={lr} equiv={equiv} inv={inv} id={id}",
             seed=seed,
         )
     ] = TransferExperiment(experiments)

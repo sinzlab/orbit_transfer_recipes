@@ -96,7 +96,10 @@ for forward, lr, gamma, softmax_temp in product(
     ] = TransferExperiment(experiments)
 
 for forward, lr, gamma in product(
-    ("rdl", "cka", "attention"),
+    ("rdl",
+       "cka",
+      "attention",
+     ),
     (0.01, 0.001, 0.0001, 0.0005),
     list(np.linspace(0.1, 1.0, 10)),
 ):
@@ -138,9 +141,9 @@ for lr, gamma, equiv, inv, id in product(
                 student_model=EquivTransferModel().to_dict(),
                 forward="equiv_learn",
                 learning_rate=lr,
-                equiv_factor=1.0,
-                invertible_factor=1.0,
-                identity_factor=1.0,
+                equiv_factor=equiv,
+                invertible_factor=inv,
+                identity_factor=id,
             ),
             seed=seed,
         )
@@ -161,7 +164,7 @@ for lr, gamma, equiv, inv, id in product(
 
     transfer_experiments[
         Description(
-            name=f"Equiv transfer: gamma={gamma} lr={lr} equiv={equiv}, inv={inv} id={id}",
+            name=f"Equiv transfer: gamma={gamma} lr={lr} equiv={equiv} inv={inv} id={id}",
             seed=seed,
         )
     ] = TransferExperiment(experiments)
