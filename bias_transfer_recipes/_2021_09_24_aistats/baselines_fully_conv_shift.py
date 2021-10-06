@@ -63,7 +63,7 @@ for shift in np.linspace(0, 40, 9):
     teacher_exp = Experiment(
         dataset=BaselineDataset(train_shift=shift),
         model=TeacherModel(),
-        trainer=BaselineTrainer(),
+        trainer=BaselineTrainer(comment="Teacher"),
         seed=seed,
     )
 
