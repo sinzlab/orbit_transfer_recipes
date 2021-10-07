@@ -65,37 +65,70 @@ teacher_exp = Experiment(
     trainer=BaselineTrainer(),
     seed=seed,
 )
+for forward, lr, hidden_dim, weight_decay in product(
+    (
+        "ce",
+    ),
+    (0.01, 0.001, 0.0001, 0.0005),
+    (40, 80, 120, 160, 200, 400, 800),
+    (1e-3,1e-4,1e-5,1e-6,1e-8),
+):
+    experiments = [teacher_exp]
+    experiments.append(
+        Experiment(
+            dataset=BaselineDataset(),
+            model=TeacherModel(),
+            trainer=BaselineTrainer(
+                student_model=StudentModel(hidden_dim=hidden_dim).to_dict(),
+                forward=forward,
+                learning_rate=lr,
+                weight_decay=weight_decay
+            ),
+            seed=seed,
+        )
+    )
 
-# for forward, lr, gamma, softmax_temp in product(
-#     (#"kd",
-#      "kd_match",
-#      ),
-#     (0.01, 0.001, 0.0001, 0.0005),
-#     list(np.linspace(0.1, 1.0, 10)),
-#     (0.1, 1.0, 2.0, 5.0, 10.0, 20.0, 100.0),
-# ):
-#     experiments = [teacher_exp]
-#     experiments.append(
-#         Experiment(
-#             dataset=BaselineDataset(),
-#             model=TeacherModel(),
-#             trainer=BaselineTrainer(
-#                 student_model=StudentModel().to_dict(),
-#                 forward=forward,
-#                 learning_rate=lr,
-#                 gamma=gamma,
-#                 softmax_temp=softmax_temp,
-#             ),
-#             seed=seed,
-#         )
-#     )
-#
-#     transfer_experiments[
-#         Description(
-#             name=f"{forward}: gamma={gamma} T={softmax_temp} lr={lr}",
-#             seed=seed,
-#         )
-#     ] = TransferExperiment(experiments)
+    transfer_experiments[
+        Description(
+            name=f"{forward}: lr={lr} weight_decay={weight_decay} hidden_dim={hidden_dim}",
+            seed=seed,
+        )
+    ] = TransferExperiment(experiments)
+
+for forward, lr, hidden_dim, weight_decay, gamma, softmax_temp in product(
+    (
+        "kd",
+        # "kd_match",
+    ),
+    (0.01, 0.001, 0.0001, 0.0005),
+    (40, 80, 120, 160, 200, 400, 800),
+    (1e-3,1e-4,1e-5,1e-6,1e-8),
+    list(np.linspace(0.1, 1.0, 10)),
+    (0.1, 1.0, 2.0, 5.0, 10.0, 20.0, 100.0),
+):
+    experiments = [teacher_exp]
+    experiments.append(
+        Experiment(
+            dataset=BaselineDataset(),
+            model=TeacherModel(),
+            trainer=BaselineTrainer(
+                student_model=StudentModel(hidden_dim=hidden_dim).to_dict(),
+                forward=forward,
+                learning_rate=lr,
+                gamma=gamma,
+                softmax_temp=softmax_temp,
+                weight_decay=weight_decay
+            ),
+            seed=seed,
+        )
+    )
+
+    transfer_experiments[
+        Description(
+            name=f"{forward}: gamma={gamma} T={softmax_temp} lr={lr} weight_decay={weight_decay} hidden_dim={hidden_dim}",
+            seed=seed,
+        )
+    ] = TransferExperiment(experiments)
 
 """
    Train  Validation  Validation Shift  Test Shift  gamma     T    lr
