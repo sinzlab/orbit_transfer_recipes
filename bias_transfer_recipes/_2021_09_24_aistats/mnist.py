@@ -158,7 +158,7 @@ for teacher in [teacher_exp, rotation_teacher_exp, noise_teacher_exp]:
         )
 
         transfer_experiments[
-            Description(name=f"Equivariance Transfer ({n} repititions)", seed=seed)
+            Description(name=f"{teacher.trainer.comment} Equivariance Transfer ({n} repititions)", seed=seed)
         ] = TransferExperiment(experiments)
 
     ##### KD ##########
@@ -183,7 +183,7 @@ for teacher in [teacher_exp, rotation_teacher_exp, noise_teacher_exp]:
     )
 
     transfer_experiments[
-        Description(name=f"Knowledge Distillation", seed=seed)
+        Description(name=f"{teacher.trainer.comment} Knowledge Distillation", seed=seed)
     ] = TransferExperiment(experiments)
 
     ##### RDL ##########
@@ -256,7 +256,7 @@ for teacher in [teacher_exp, rotation_teacher_exp, noise_teacher_exp]:
         )
 
         transfer_experiments[
-            Description(name=f"Attention Transfer gamma:{gamma}", seed=seed)
+            Description(name=f"{teacher.trainer.comment} Attention Transfer gamma:{gamma}", seed=seed)
         ] = TransferExperiment(experiments)
 
 experiments = []
