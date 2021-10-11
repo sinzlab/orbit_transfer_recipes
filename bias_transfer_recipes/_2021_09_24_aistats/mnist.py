@@ -224,7 +224,7 @@ for teacher in [teacher_exp, rotation_teacher_exp, noise_teacher_exp]:
             Description(name=f"RDL ({dist}) gamma:{gamma}", seed=seed)
         ] = TransferExperiment(experiments)
 
-    ##### RDL ##########
+    ##### Attention ##########
     for gamma in [0.1, 0.5, 0.8]:
         experiments = [teacher_exp]
         experiments.append(
@@ -235,7 +235,6 @@ for teacher in [teacher_exp, rotation_teacher_exp, noise_teacher_exp]:
                         "layers.0": "out.1",
                         "layers.6": "out.2",
                         "layers.12": "out.3",
-                        "layers.20": "out.4",
                     }
                 ),
                 trainer=TransferTrainer(
@@ -244,7 +243,6 @@ for teacher in [teacher_exp, rotation_teacher_exp, noise_teacher_exp]:
                             "layers.1": "out.1",
                             "layers.5": "out.2",
                             "layers.9": "out.3",
-                            "layers.13": "out.4",
                         }
                     ).to_dict(),
                     regularization={
