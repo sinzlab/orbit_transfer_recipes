@@ -95,11 +95,11 @@ for teacher in [teacher_exp, rotation_teacher_exp, noise_teacher_exp]:
         Description(
             name=f"MNIST Experiment Teacher {teacher.trainer.comment}", seed=seed
         )
-    ] = TransferExperiment([teacher_exp])
+    ] = TransferExperiment([teacher])
 
     ########## Orbit #############
     for n in [1, 2, 3, 4, 5]:
-        experiments = [teacher_exp]
+        experiments = [teacher]
         experiments.append(
             Experiment(
                 dataset=BaselineDataset(),
@@ -162,7 +162,7 @@ for teacher in [teacher_exp, rotation_teacher_exp, noise_teacher_exp]:
         ] = TransferExperiment(experiments)
 
     ##### KD ##########
-    experiments = [teacher_exp]
+    experiments = [teacher]
     experiments.append(
         Experiment(
             dataset=BaselineDataset(),
@@ -188,7 +188,7 @@ for teacher in [teacher_exp, rotation_teacher_exp, noise_teacher_exp]:
 
     ##### RDL ##########
     for gamma, dist in product([0.1, 0.5, 0.8], ["CKA", "corr"]):
-        experiments = [teacher_exp]
+        experiments = [teacher]
         experiments.append(
             Experiment(
                 dataset=BaselineDataset(),
@@ -221,12 +221,12 @@ for teacher in [teacher_exp, rotation_teacher_exp, noise_teacher_exp]:
         )
 
         transfer_experiments[
-            Description(name=f"RDL ({dist}) gamma:{gamma}", seed=seed)
+            Description(name=f"{teacher.trainer.comment} RDL ({dist}) gamma:{gamma}", seed=seed)
         ] = TransferExperiment(experiments)
 
     ##### Attention ##########
     for gamma in [0.1, 0.5, 0.8]:
-        experiments = [teacher_exp]
+        experiments = [teacher]
         experiments.append(
             Experiment(
                 dataset=BaselineDataset(),
