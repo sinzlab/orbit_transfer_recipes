@@ -96,14 +96,14 @@ for forward, lr, hidden_dim, weight_decay in product(
 for forward, lr, hidden_dim, weight_decay, gamma, softmax_temp in product(
     (
         "kd",
-        # "kd_match",
+         "kd_match",
     ),
     (0.001, 0.0001),
     (40, 80, 120, 200, 400, 800),
     (1e-4, 1e-6, 1e-8),
-    # list(np.linspace(0.1, 1.0, 10)),
-    [1.0],
-    (0.1, 1.0, 2.0, 5.0, 10.0, 20.0),
+    list(np.linspace(0.1, 1.0, 10)),
+    # [1.0],
+    ( 1.0, 2.0, 5.0, 10.0),
 ):
     experiments = [teacher_exp]
     experiments.append(
@@ -136,35 +136,35 @@ kd    98.611111       52.75              15.5        14.6    0.7  10.0  0.01
 kd_match  100.0        98.0             96.75        96.8    0.1  0.1  0.0005
 """
 
-# for forward, lr, gamma in product(
-#     (#"rdl",
-#        # "cka",
-#       # "attention",
-#      ),
-#     (0.01, 0.001, 0.0001, 0.0005),
-#     list(np.linspace(0.1, 1.0, 10)),
-# ):
-#     experiments = [teacher_exp]
-#     experiments.append(
-#         Experiment(
-#             dataset=BaselineDataset(),
-#             model=TeacherModel(),
-#             trainer=BaselineTrainer(
-#                 student_model=StudentModel().to_dict(),
-#                 forward=forward,
-#                 learning_rate=lr,
-#                 gamma=gamma,
-#             ),
-#             seed=seed,
-#         )
-#     )
-#
-#     transfer_experiments[
-#         Description(
-#             name=f"{forward}: gamma={gamma} lr={lr}",
-#             seed=seed,
-#         )
-#     ] = TransferExperiment(experiments)
+for forward, lr, gamma in product(
+    ("rdl",
+       "cka",
+       "attention",
+     ),
+    (0.01, 0.001, 0.0001, 0.0005),
+    list(np.linspace(0.1, 1.0, 10)),
+):
+    experiments = [teacher_exp]
+    experiments.append(
+        Experiment(
+            dataset=BaselineDataset(),
+            model=TeacherModel(),
+            trainer=BaselineTrainer(
+                student_model=StudentModel().to_dict(),
+                forward=forward,
+                learning_rate=lr,
+                gamma=gamma,
+            ),
+            seed=seed,
+        )
+    )
+
+    transfer_experiments[
+        Description(
+            name=f"{forward}: gamma={gamma} lr={lr}",
+            seed=seed,
+        )
+    ] = TransferExperiment(experiments)
 
 """
                Train  Validation  Validation Shift  Test Shift  gamma    lr
@@ -174,49 +174,49 @@ cka             100.0        59.5             18.25        15.8    0.7  0.0001
 rdl              99.75        56.5             10.25        13.2    0.8  0.0001
 """
 
-# for lr, gamma, equiv, inv, id in product(
-#     (0.01, 0.001, 0.0001, 0.0005),
-#     list(np.linspace(0.1, 1.0, 10)),
-#     (0.1, 1.0, 10.0),
-#     (0.1, 1.0, 10.0),
-#     (0.1, 1.0, 10.0),
-# ):
-#     experiments = [teacher_exp]
-#     experiments.append(
-#         Experiment(
-#             dataset=BaselineDataset(),
-#             model=TeacherModel(),
-#             trainer=BaselineTrainer(
-#                 student_model=EquivTransferModel().to_dict(),
-#                 forward="equiv_learn",
-#                 learning_rate=lr,
-#                 equiv_factor=equiv,
-#                 invertible_factor=inv,
-#                 identity_factor=id,
-#             ),
-#             seed=seed,
-#         )
-#     )
-#     experiments.append(
-#         Experiment(
-#             dataset=BaselineDataset(),
-#             model=EquivTransferModel(),
-#             trainer=BaselineTrainer(
-#                 student_model=StudentModel().to_dict(),
-#                 forward="equiv_transfer",
-#                 learning_rate=lr,
-#                 gamma=gamma,
-#             ),
-#             seed=seed,
-#         )
-#     )
-#
-#     transfer_experiments[
-#         Description(
-#             name=f"Equiv transfer: gamma={gamma} lr={lr} equiv={equiv} inv={inv} id={id}",
-#             seed=seed,
-#         )
-#     ] = TransferExperiment(experiments)
+for lr, gamma, equiv, inv, id in product(
+    (0.01, 0.001, 0.0001, 0.0005),
+    list(np.linspace(0.1, 1.0, 10)),
+    (0.1, 1.0, 10.0),
+    (0.1, 1.0, 10.0),
+    (0.1, 1.0, 10.0),
+):
+    experiments = [teacher_exp]
+    experiments.append(
+        Experiment(
+            dataset=BaselineDataset(),
+            model=TeacherModel(),
+            trainer=BaselineTrainer(
+                student_model=EquivTransferModel().to_dict(),
+                forward="equiv_learn",
+                learning_rate=lr,
+                equiv_factor=equiv,
+                invertible_factor=inv,
+                identity_factor=id,
+            ),
+            seed=seed,
+        )
+    )
+    experiments.append(
+        Experiment(
+            dataset=BaselineDataset(),
+            model=EquivTransferModel(),
+            trainer=BaselineTrainer(
+                student_model=StudentModel().to_dict(),
+                forward="equiv_transfer",
+                learning_rate=lr,
+                gamma=gamma,
+            ),
+            seed=seed,
+        )
+    )
+
+    transfer_experiments[
+        Description(
+            name=f"Equiv transfer: gamma={gamma} lr={lr} equiv={equiv} inv={inv} id={id}",
+            seed=seed,
+        )
+    ] = TransferExperiment(experiments)
 
 
 """
