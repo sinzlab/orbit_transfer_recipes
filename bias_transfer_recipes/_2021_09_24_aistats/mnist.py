@@ -37,7 +37,7 @@ class BaselineTrainer(NoiseAugmentationMixin, Classification):
     def __init__(self, **kwargs):
         self.load_kwargs(**kwargs)
         self.max_iter = 400
-        # self.lr_milestones = (20, 40)
+        # self.max_iter = 1
         self.lr_warmup = 20
         self.patience = 20
         self.threshold: float = 0.0
@@ -120,7 +120,8 @@ for teacher in [
             }
         )
     ########## Orbit #############
-    for n in [1, 2, 3, 4, 5]:
+    for n in [1, 2, 3, 4, 5
+              ]:
         experiments = [teacher]
         experiments.append(
             Experiment(
@@ -137,7 +138,7 @@ for teacher in [
                         "regularizer": "EquivarianceTransfer",
                         "gamma": 1.0,
                         "decay_gamma": False,
-                        "group_size": 5,
+                        "group_size": 25,
                         "learn_equiv": True,
                         "max_stacked_transform": n,
                     },
@@ -164,7 +165,7 @@ for teacher in [
                         "regularizer": "EquivarianceTransfer",
                         "gamma": 1.0,
                         "decay_gamma": False,
-                        "group_size": 5,
+                        "group_size": 25,
                         "learn_equiv": False,
                         "max_stacked_transform": n,
                     },
