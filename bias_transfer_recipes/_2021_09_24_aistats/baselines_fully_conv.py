@@ -224,6 +224,7 @@ for lr, gamma, equiv, inv, id in product(
                 invertible_factor=inv,
                 identity_factor=id,
                 select_on_loss=True,
+                id_between_filters=True,
             ),
             seed=seed,
         )
