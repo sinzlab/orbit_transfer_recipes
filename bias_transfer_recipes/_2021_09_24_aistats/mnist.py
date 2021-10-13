@@ -149,8 +149,6 @@ for teacher in [
                 dataset=BaselineDataset(),
                 model=teacher.model,
                 trainer=TransferTrainer(
-                    max_iter=28,
-                    lr_warmup=5,
                     freeze_bn="all",
                     switch_teacher=True,
                     main_objective="loss",
