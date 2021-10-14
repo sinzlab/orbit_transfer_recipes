@@ -33,6 +33,7 @@ class StudentModel(TeacherModel):
     def __init__(self, **kwargs):
         self.load_kwargs(**kwargs)
         self.type = "fc_single"
+        self.hidden_dim = 600
         super().__init__(**kwargs)
 
 
@@ -58,9 +59,7 @@ class BaselineTrainer(SimpleTrainerConfig):
         super().__init__(**kwargs)
 
 
-for shift in [
-    30,
-]:  # np.linspace(0, 40, 9)
+for shift in  np.linspace(0, 40, 9):
     seed = 42
     teacher_exp = Experiment(
         dataset=BaselineDataset(train_shift=shift),
@@ -70,12 +69,17 @@ for shift in [
     )
 
     settings = {
-        "kd": {"lr": 0.001, "softmax_temp": 1, "gamma": 1.0},
-        # "kd_match": {"lr": 0.0005, "softmax_temp": 0.1, "gamma": 0.1},
-        # "attention": {"lr": 0.001, "gamma": 0.5},
+        "kd": {"lr": 0.001, "weight_decay": 0.0001, "softmax_temp": 1, "gamma": 0.6},
+        "kd_match": {
+            "lr": 0.001,
+            "weight_decay": 1e-8,
+            "softmax_temp": 5.0,
+            "gamma": 0.4,
+        },
+        "attention": {"lr": 0.001, "gamma": 0.9},
         # "cka": {"lr": 0.001, "gamma": 0.5},
-        # "rdl": {"lr": 0.001, "gamma": 0.5},
-        "ce": {"lr": 0.001}
+        "rdl": {"lr": 0.0001, "gamma": 0.9},
+        "ce": {"lr": 0.001, "weight_decay": 0.0001},
     }
 
     for forward, setting in settings.items():
@@ -85,9 +89,8 @@ for shift in [
                 dataset=BaselineDataset(train_shift=shift),
                 model=TeacherModel(),
                 trainer=BaselineTrainer(
-                    student_model=StudentModel(hidden_dim=80).to_dict(),
+                    student_model=StudentModel().to_dict(),
                     forward=forward,
-                    weight_decay=1e-6,
                     **setting,
                 ),
                 seed=seed,
@@ -102,46 +105,47 @@ for shift in [
             )
         ] = TransferExperiment(experiments)
 
-    # lr = 0.01
-    # gamma = 1.0
-    # inv = 1.0
-    # equiv = 1.0
-    # id = 1.0
-    #
-    # experiments = [teacher_exp]
-    # experiments.append(
-    #     Experiment(
-    #         dataset=BaselineDataset(train_shift=shift),
-    #         model=TeacherModel(),
-    #         trainer=BaselineTrainer(
-    #             student_model=EquivTransferModel().to_dict(),
-    #             forward="equiv_learn",
-    #             learning_rate=lr,
-    #             equiv_factor=equiv,
-    #             invertible_factor=inv,
-    #             identity_factor=id,
-    #             select_on_loss=True
-    #         ),
-    #         seed=seed,
-    #     )
-    # )
-    # experiments.append(
-    #     Experiment(
-    #         dataset=BaselineDataset(train_shift=shift),
-    #         model=EquivTransferModel(),
-    #         trainer=BaselineTrainer(
-    #             student_model=StudentModel().to_dict(),
-    #             forward="equiv_transfer",
-    #             learning_rate=lr,
-    #             gamma=gamma,
-    #         ),
-    #         seed=seed,
-    #     )
-    # )
-    #
-    # transfer_experiments[
-    #     Description(
-    #         name=f"Equiv transfer: shift={shift} gamma={gamma} lr={lr} equiv={equiv} inv={inv} id={id}",
-    #         seed=seed,
-    #     )
-    # ] = TransferExperiment(experiments)
+    lr = 0.01
+    gamma = 1.0
+    inv = 10.0
+    equiv = 0.1
+    id = 10.0
+
+    experiments = [teacher_exp]
+    experiments.append(
+        Experiment(
+            dataset=BaselineDataset(train_shift=shift),
+            model=TeacherModel(),
+            trainer=BaselineTrainer(
+                student_model=EquivTransferModel().to_dict(),
+                forward="equiv_learn",
+                learning_rate=lr,
+                equiv_factor=equiv,
+                invertible_factor=inv,
+                identity_factor=id,
+                select_on_loss=True,
+                id_between_filters=True,
+            ),
+            seed=seed,
+        )
+    )
+    experiments.append(
+        Experiment(
+            dataset=BaselineDataset(train_shift=shift),
+            model=EquivTransferModel(),
+            trainer=BaselineTrainer(
+                student_model=StudentModel().to_dict(),
+                forward="equiv_transfer",
+                learning_rate=lr,
+                gamma=gamma,
+            ),
+            seed=seed,
+        )
+    )
+
+    transfer_experiments[
+        Description(
+            name=f"Equiv transfer: shift={shift} gamma={gamma} lr={lr} equiv={equiv} inv={inv} id={id}",
+            seed=seed,
+        )
+    ] = TransferExperiment(experiments)

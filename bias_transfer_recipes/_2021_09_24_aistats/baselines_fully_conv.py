@@ -158,12 +158,6 @@ for forward, lr, weight_decay, gamma, softmax_temp in product(
             seed=seed,
         )
     ] = TransferExperiment(experiments)
-"""
-   Train  Validation  Validation Shift  Test Shift  gamma     T    lr
-name                                                                        
-kd    98.611111       52.75              15.5        14.6    0.7  10.0  0.01
-kd_match  100.0        98.0             96.75        96.8    0.1  0.1  0.0005
-"""
 
 for forward, lr, gamma in product(
     (
@@ -196,13 +190,6 @@ for forward, lr, gamma in product(
         )
     ] = TransferExperiment(experiments)
 
-"""
-               Train  Validation  Validation Shift  Test Shift  gamma    lr
-name                                                                       
-attention  98.805556       51.25              15.5        13.8    0.7  0.01
-cka             100.0        59.5             18.25        15.8    0.7  0.0001
-rdl              99.75        56.5             10.25        13.2    0.8  0.0001
-"""
 
 for lr, gamma, equiv, inv, id in product(
     (0.01, 0.001, 0.0001, 0.0005),
@@ -252,11 +239,58 @@ for lr, gamma, equiv, inv, id in product(
 
 
 """
- Train  Validation  Validation + Shift  Test + Shift  \
-name                                                                      
-Equiv transfer  96.638889       97.25               97.25          97.2   
+         lr  weight_decay  hidden_dim    0 train  Seen Shifts  0 validation  \
+name                                                                          
+ce    0.001        0.0001       600.0  83.333333         50.4         54.25   
 
-                gamma    lr  equiv  inv   id  
-name                                          
-Equiv transfer    1.0  0.01    1.0  1.0  1.0  
+      Unseen Shifts  All Shifts  gamma   T  equiv  inv  id  
+name                                                        
+ce             11.1        40.0    NaN NaN    NaN  NaN NaN  
+         lr  weight_decay  hidden_dim    0 train  Seen Shifts  0 validation  \
+name                                                                          
+KD    0.001        0.0001       600.0  83.333333         52.3         52.25   
+
+      Unseen Shifts  All Shifts  gamma    T  equiv  inv  id  
+name                                                         
+KD             13.5        39.0    0.6  1.0    NaN  NaN NaN  
+                    lr  weight_decay  hidden_dim    0 train  Seen Shifts  \
+name                                                                       
+Direct Matching  0.001  1.000000e-08         NaN  83.333333         97.2   
+
+                 0 validation  Unseen Shifts  All Shifts  gamma    T  equiv  \
+name                                                                          
+Direct Matching          96.0           90.6        94.5    0.4  5.0    NaN   
+
+                 inv  id  
+name                      
+Direct Matching  NaN NaN  
+          lr  weight_decay  hidden_dim    0 train  Seen Shifts  0 validation  \
+name                                                                           
+RDL   0.0001           NaN         NaN  82.666667         55.6         51.25   
+
+      Unseen Shifts  All Shifts  gamma   T  equiv  inv  id  
+name                                                        
+RDL            14.4        42.6    0.9 NaN    NaN  NaN NaN  
+         lr  weight_decay  hidden_dim    0 train  Seen Shifts  0 validation  \
+name                                                                          
+cka   0.001           NaN         NaN  83.333333         56.9          57.0   
+
+      Unseen Shifts  All Shifts  gamma   T  equiv  inv  id  
+name                                                        
+cka            17.6        45.7    0.9 NaN    NaN  NaN NaN  
+              lr  weight_decay  hidden_dim    0 train  Seen Shifts  \
+name                                                                 
+Attention  0.001           NaN         NaN  83.333333         55.8   
+
+           0 validation  Unseen Shifts  All Shifts  gamma   T  equiv  inv  id  
+name                                                                           
+Attention          60.0           12.0        43.0    0.9 NaN    NaN  NaN NaN  
+         lr  weight_decay  hidden_dim  0 train  Seen Shifts  0 validation  \
+name                                                                        
+Orbit  0.01           NaN         NaN     79.5         95.4         95.75   
+
+       Unseen Shifts  All Shifts  gamma   T  equiv   inv    id  
+name                                                            
+Orbit           95.7        95.7    1.0 NaN    0.1  10.0  10.0  
+
 """
