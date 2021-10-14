@@ -175,3 +175,42 @@ for lr, gamma, equiv, inv, id in product(
             seed=seed,
         )
     ] = TransferExperiment(experiments)
+
+
+"""
+      gamma    T    lr    0 train  Seen Shifts  0 validation  Unseen Shifts  \
+name                                                                          
+KD      0.3  2.0  0.01  80.416667         53.6          55.0           11.0   
+
+      All Shifts  equiv  inv  id  
+name                              
+KD          39.9    NaN  NaN NaN  
+                 gamma     T    lr  0 train  Seen Shifts  0 validation  \
+name                                                                     
+Direct Matching    0.1  10.0  0.01    83.25         54.7          58.0   
+
+                 Unseen Shifts  All Shifts  equiv  inv  id  
+name                                                        
+Direct Matching           12.2        40.5    NaN  NaN NaN  
+      gamma   T    lr    0 train  Seen Shifts  0 validation  Unseen Shifts  \
+name                                                                         
+RDL     0.6 NaN  0.01  82.444444         51.4         56.75           11.7   
+
+      All Shifts  equiv  inv  id  
+name                              
+RDL         39.7    NaN  NaN NaN  
+           gamma   T    lr    0 train  Seen Shifts  0 validation  \
+name                                                               
+Attention    0.6 NaN  0.01  83.333333         51.7          53.5   
+
+           Unseen Shifts  All Shifts  equiv  inv  id  
+name                                                  
+Attention           12.3        40.0    NaN  NaN NaN  
+              gamma   T    lr    0 train  Seen Shifts  0 validation  \
+name                                                                  
+Equivariance    1.0 NaN  0.01  66.333333         77.2          80.5   
+
+              Unseen Shifts  All Shifts  equiv   inv   id  
+name                                                       
+Equivariance           76.5        77.3    0.1  10.0  1.0
+"""

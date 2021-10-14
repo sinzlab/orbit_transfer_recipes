@@ -33,6 +33,7 @@ class StudentModel(TeacherModel):
     def __init__(self, **kwargs):
         self.load_kwargs(**kwargs)
         self.type = "fc_single"
+        self.hidden_dim: int = 600
         super().__init__(**kwargs)
 
 
@@ -68,7 +69,7 @@ teacher_exp = Experiment(
 for forward, lr, hidden_dim, weight_decay in product(
     ("ce",),
     (0.001, 0.0001),
-    (40, 80, 120, 200, 400, 800),
+    (40, 80, 120, 200, 600, 400, 800),
     (1e-4, 1e-6, 1e-8),
 ):
     experiments = [teacher_exp]
@@ -96,7 +97,7 @@ for forward, lr, hidden_dim, weight_decay in product(
 for forward, lr, hidden_dim, weight_decay, gamma, softmax_temp in product(
     ("kd",),
     (0.001, 0.0001),
-    (40, 80, 120, 200, 400, 800),
+    (600,),
     (1e-4, 1e-6, 1e-8),
     list(np.linspace(0.1, 1.0, 10)),
     # [1.0],
