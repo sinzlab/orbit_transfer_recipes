@@ -129,7 +129,6 @@ for forward, lr, hidden_dim, weight_decay, gamma, softmax_temp in product(
 for forward, lr, weight_decay, gamma, softmax_temp in product(
     ("kd_match",),
     (0.001, 0.0001),
-    (40, 80, 120, 200, 400, 800),
     (1e-4, 1e-6, 1e-8),
     list(np.linspace(0.1, 1.0, 10)),
     # [1.0],

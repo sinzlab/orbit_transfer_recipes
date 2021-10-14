@@ -49,7 +49,7 @@ class EquivTransferModel(MNIST1DModelConfig):
 class BaselineTrainer(SimpleTrainerConfig):
     def __init__(self, **kwargs):
         self.load_kwargs(**kwargs)
-        self.total_steps = 400
+        self.total_steps = 40000
         self.eval_every = 100
         self.print_every = 100
         self.learning_rate = 0.01
