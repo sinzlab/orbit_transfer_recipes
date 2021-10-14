@@ -303,7 +303,7 @@ teacher_exp = Experiment(
 #                 seed=seed,
 #             )
 #         ] = TransferExperiment(experiments)
-
+#
 # experiments = []
 # experiments.append(
 #     Experiment(
@@ -322,7 +322,7 @@ experiments.append(
     Experiment(
         dataset=BaselineDataset(dataset_cls="MNIST-C"),
         model=StudentModel(),
-        trainer=BaselineTrainer(),
+        trainer=BaselineTrainer(comment="Training on MNIST-C"),
         seed=seed,
     )
 )
