@@ -34,18 +34,11 @@ class StudentModel(ClassificationModel):
         self.comment = f"MNIST {self.type}"
         super().__init__(**kwargs)
 
-class TeacherModel(CNNModel):
+
+class TeacherModel(MNISTModel):
     def __init__(self, **kwargs):
         self.load_kwargs(**kwargs)
-        self.output_size: int = 10
-        self.num_layers: int = 4
-        self.channels: list = [1, 128, 64, 64]
-        self.kernel_size: list = [3, 3, 3]
-        self.pool_size: list = [1, 2, 3]
-        self.max_out: list = [1, 1, 1]
-        self.activation: str = "relu"
-        self.dropout: float = 0.1
-        self.batch_norm: bool = False
+        self.type: str = "resnet18"
         super().__init__(**kwargs)
 
 
@@ -78,16 +71,17 @@ teacher_exp = Experiment(
     dataset=BaselineDataset(),
     model=TeacherModel(
         get_intermediate_rep={
-            "layers.0": "out.1",
-            "layers.5": "out.2",
-            "layers.10": "out.3",
-            "layers.17": "out.4",
+            "conv1": "out.1",
+            "layer1.1.conv2": "out.2",
+            "layer2.1.conv2": "out.3",
+            "layer3.1.conv2": "out.4",
+            "layer4.1.conv2": "out.5",
+            "fc": "out.6",
         }
     ),
     trainer=BaselineTrainer(comment="Translation Invariant"),
     seed=seed,
 )
-
 
 # rotation_teacher_exp = Experiment(
 #     dataset=BaselineDataset(),
@@ -168,7 +162,7 @@ for teacher in [
                     maximize=False,
                     deactivate_dropout=True,
                     student_model=TransferModel(
-                        spatial_transformer=False, num_layers=4, vit_input=False
+                        spatial_transformer=False, num_layers=6, vit_input=False
                     ).to_dict(),
                     regularization={
                         "regularizer": "EquivarianceTransfer",
@@ -190,15 +184,17 @@ for teacher in [
             Experiment(
                 dataset=BaselineDataset(),
                 model=TransferModel(
-                    spatial_transformer=False, num_layers=4, vit_input=True
+                    spatial_transformer=False, num_layers=6, vit_input=True
                 ),
                 trainer=TransferTrainer(
                     student_model=StudentModel(
                         get_intermediate_rep={
                             "transformer.layers.0.1.fn.net.4": "out.1",
-                            "transformer.layers.2.1.fn.net.4": "out.2",
-                            "transformer.layers.5.1.fn.net.4": "out.3",
-                            "mlp_head.2": "out.4",
+                            "transformer.layers.1.1.fn.net.4": "out.2",
+                            "transformer.layers.2.1.fn.net.4": "out.3",
+                            "transformer.layers.3.1.fn.net.4": "out.4",
+                            "transformer.layers.5.1.fn.net.4": "out.5",
+                            "mlp_head.2": "out.6",
                         }
                     ).to_dict(),
                     regularization={
