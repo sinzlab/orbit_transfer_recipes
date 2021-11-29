@@ -19,7 +19,6 @@ class BaselineDataset(MNIST):
         super().__init__(**kwargs)
 
 
-
 class StudentModel(ClassificationModel):
     def __init__(self, **kwargs):
         self.load_kwargs(**kwargs)
@@ -35,6 +34,7 @@ class StudentModel(ClassificationModel):
         self.comment = f"MNIST {self.type}"
         super().__init__(**kwargs)
 
+
 class TeacherModel(MNISTModel):
     def __init__(self, **kwargs):
         self.load_kwargs(**kwargs)
@@ -46,7 +46,7 @@ class BaselineTrainer(NoiseAugmentationMixin, Classification):
     def __init__(self, **kwargs):
         self.load_kwargs(**kwargs)
         self.max_iter = 50
-        # self.max_iter = 40
+        # self.max_iter = 400
         # self.lr_warmup = 20
         self.patience = 20
         self.threshold: float = 0.0
@@ -64,7 +64,6 @@ class BaselineTrainer(NoiseAugmentationMixin, Classification):
 class TransferTrainer(TransferMixin, BaselineTrainer):
     def __init__(self, **kwargs):
         self.load_kwargs(**kwargs)
-        self.max_iter = 50
         super().__init__(**kwargs)
 
 
@@ -88,8 +87,6 @@ teacher_exp = Experiment(
 #     dataset=BaselineDataset(),
 #     model=TeacherModel(
 #         type="gcnn",
-#         small=False,
-#         large_filters=True,
 #         get_intermediate_rep={
 #             "conv1": "out.1",
 #             "conv2": "out.2",
@@ -165,18 +162,7 @@ for teacher in [
                     maximize=False,
                     deactivate_dropout=True,
                     student_model=TransferModel(
-                        # unet=True,
-                        spatial_transformer=False,
-                        only_translation=False,
-                        # kernel_size=5,
-                        # spatial_kernel_size=[5, 5, 3, 1],
-                        # channel_kernel_size=[1, 2, 4, 5],
-                        # spatial_pooling=[[2, 2], [2, 2], [2, 2], [1] * 2],
-                        # channel_pooling=[[1] * 2, [1] * 2, [2, 2], [1, 1]],
-                        # latent_size=5,
-                        num_layers=5,
-                        group_size=25,
-                        # patch_size=64,
+                        spatial_transformer=False, num_layers=5, vit_input=True
                     ).to_dict(),
                     regularization={
                         "regularizer": "EquivarianceTransfer",
@@ -185,11 +171,8 @@ for teacher in [
                         "group_size": 25,
                         "learn_equiv": True,
                         "max_stacked_transform": n,
-                        "id_between_filters": True,
-                        "id_between_transforms": False,
-                        "id_factor": 1.0,
-                        "equiv_factor": 1.0,
-                        "inv_factor": 1.0,
+                        "id_between_filters": id_between_filters,
+                        "id_factor": id_factor,
                     },
                     comment="Transfer without fixed identity regularization",
                 ),
@@ -201,11 +184,7 @@ for teacher in [
             Experiment(
                 dataset=BaselineDataset(),
                 model=TransferModel(
-                    spatial_transformer=False,
-                    # patch_size=64,
-                    num_layers=5,
-                    group_size=25,
-                    vit_input=True
+                    spatial_transformer=False, num_layers=5, vit_input=True
                 ),
                 trainer=TransferTrainer(
                     student_model=StudentModel(
