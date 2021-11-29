@@ -10,7 +10,7 @@
   },
   "mnist_loss_ablation": {
     "bias_transfer": "8bf876f32a0fe90d23fe363a644ef83402c58f34",
-    "nntransfer": "c5a24b1994306f95c9cffdc371194b999e2adfbc",
+    "nntransfer": "264f2339265687b4c619239d5442a5fc0b791ba8",
     "nnplayground": "38b1ec387fc6c7263ea79ce67a6953047e341696",
     "nnfabrik": "cff4d463affcf96984fee9a44b347e57d2d0034e"
   }

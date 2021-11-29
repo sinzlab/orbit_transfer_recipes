@@ -15,7 +15,7 @@ class BaselineDataset(MNIST):
         self.load_kwargs(**kwargs)
         self.add_corrupted_test = True
         self.add_rotated_test = True
-        self.batch_size = 64
+        self.batch_size = 256
         super().__init__(**kwargs)
 
 
