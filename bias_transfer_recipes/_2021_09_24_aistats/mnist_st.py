@@ -49,9 +49,9 @@ class StudentModel(MLPModel):
 class BaselineTrainer(NoiseAugmentationMixin, Classification):
     def __init__(self, **kwargs):
         self.load_kwargs(**kwargs)
-        # self.max_iter = 400
-        self.max_iter = 2
-        self.lr_warmup = 20
+        # self.max_iter = 20
+        self.max_iter = 40
+        # self.lr_warmup = 20
         self.patience = 20
         self.threshold: float = 0.0
         self.lr_decay_steps = 5  # Number of times the learning rate should be reduced before stopping the training.
@@ -62,12 +62,14 @@ class BaselineTrainer(NoiseAugmentationMixin, Classification):
             "lr": 0.0003,
             "weight_decay": 0.000000002,
         }
+        self.noise_test = {}
         super().__init__(**kwargs)
 
 
 class TransferTrainer(TransferMixin, BaselineTrainer):
     def __init__(self, **kwargs):
         self.load_kwargs(**kwargs)
+        self.max_iter = 30
         super().__init__(**kwargs)
 
 
@@ -86,20 +88,22 @@ teacher_exp = Experiment(
     seed=seed,
 )
 
-# rotation_teacher_exp = Experiment(
-#     dataset=BaselineDataset(),
-#     model=TeacherModel(
-#         type="gcnn",
-#         get_intermediate_rep={
-#             "conv1": "out.1",
-#             "conv2": "out.2",
-#             "conv3": "out.3",
-#             "flatten": "out.4",
-#         },
-#     ),
-#     trainer=BaselineTrainer(comment="Rotation Invariant"),
-#     seed=seed,
-# )
+rotation_teacher_exp = Experiment(
+    dataset=BaselineDataset(),
+    model=TeacherModel(
+        type="gcnn",
+        small=False,
+        large_filters=False,
+        get_intermediate_rep={
+            "pool1": "out.1",
+            "pool2": "out.2",
+            "pool3": "out.3",
+            "flatten": "out.4",
+        },
+    ),
+    trainer=BaselineTrainer(comment="Rotation Invariant"),
+    seed=seed,
+)
 #
 # noise_teacher_exp = Experiment(
 #     dataset=BaselineDataset(),
@@ -125,34 +129,37 @@ teacher_exp = Experiment(
 #     seed=seed,
 # )
 #
+G = 4
 for teacher in [
-    teacher_exp,
-    # rotation_teacher_exp,
+    # teacher_exp,
+    rotation_teacher_exp,
     # noise_teacher_exp,
 ]:
     rotation = teacher.model.type == "gcnn"
-    transfer_experiments[
-        Description(
-            name=f"MNIST Experiment Teacher {teacher.trainer.comment}", seed=seed
-        )
-    ] = TransferExperiment([teacher])
+    # transfer_experiments[
+    #     Description(
+    #         name=f"MNIST Experiment Teacher {teacher.trainer.comment}", seed=seed
+    #     )
+    # ] = TransferExperiment([teacher])
 
     ########## Orbit #############
     for n, id_between_filters, id_factor in product(
-        [1,
-         # 2,
-         # 3, 4, 5
+        [
+            1,  # 2, 3, 4, 5
         ],
         [
-            True,
-            # , False
-         ],
-        [#1.0,
-         10.0,
+            # True,
+            False
+        ],
+        [
+            # 0.1,
+            1.0,
+            # 10.0,
             # 100.0
-         ],
+        ],
     ):
         experiments = [teacher]
+        seed = 44
         experiments.append(
             Experiment(
                 dataset=BaselineDataset(),
@@ -163,16 +170,39 @@ for teacher in [
                     main_objective="loss",
                     maximize=False,
                     deactivate_dropout=True,
-                    student_model=TransferModel().to_dict(),
+                    student_model=TransferModel(
+                        # unet=True,
+                        spatial_transformer=True,
+                        only_translation=False,
+                        prevent_translation=False,
+                        include_channels=True,
+                        use_layer_transforms=True,
+                        # kernel_size=5,
+                        # spatial_kernel_size=[5, 5, 3, 1],
+                        # channel_kernel_size=[1, 2, 4, 5],
+                        # spatial_pooling=[[2, 2], [2, 2], [2, 2], [1] * 2],
+                        # channel_pooling=[[1] * 2, [1] * 2, [2, 2], [1, 1]],
+                        # latent_size=5,
+                        num_layers=4,
+                        group_size=G,
+                        patch_size=12,
+                    ).to_dict(),
                     regularization={
                         "regularizer": "EquivarianceTransfer",
                         "gamma": 1.0,
                         "decay_gamma": False,
-                        "group_size": 25,
+                        "group_size": G,
                         "learn_equiv": True,
                         "max_stacked_transform": n,
-                        "id_between_filters": id_between_filters,
-                        "id_factor": id_factor,
+                        "id_between_filters": True,
+                        "id_between_transforms": False,
+                        "id_factor": 1.0,
+                        "ce_factor": 1.0,
+                        "equiv_factor": 1.0,
+                        "inv_factor": 1.0,
+                        "hinge_epsilon": 1.5,
+                        "mse_dist": True,
+                        "ramp_up": {"inv": 10, "equiv": 10}
                     },
                     comment="Transfer without fixed identity regularization",
                 ),
@@ -183,7 +213,16 @@ for teacher in [
         experiments.append(
             Experiment(
                 dataset=BaselineDataset(),
-                model=TransferModel(),
+                model=TransferModel(
+                    spatial_transformer=True,
+                    only_translation=False,
+                    prevent_translation=False,
+                    include_channels=True,
+                    use_layer_transforms=True,
+                    patch_size=32,
+                    num_layers=4,
+                    group_size=G,
+                ),
                 trainer=TransferTrainer(
                     student_model=StudentModel(
                         get_intermediate_rep={
@@ -197,7 +236,7 @@ for teacher in [
                         "regularizer": "EquivarianceTransfer",
                         "gamma": 1.0,
                         "decay_gamma": False,
-                        "group_size": 25,
+                        "group_size": G,
                         "learn_equiv": False,
                         "max_stacked_transform": n,
                     },
@@ -213,8 +252,8 @@ for teacher in [
                 seed=seed,
             )
         ] = TransferExperiment(experiments)
-
-    ##### KD ##########
+#
+#     ##### KD ##########
 #     for softmax_temp in [0.1, 1.0, 2.0, 5.0, 10.0]:
 #         experiments = [teacher]
 #         experiments.append(
@@ -325,7 +364,7 @@ for teacher in [
 # transfer_experiments[
 #     Description(name=f"MNIST Experiment Student", seed=seed)
 # ] = TransferExperiment(experiments)
-
+#
 # experiments = []
 # experiments.append(
 #     Experiment(

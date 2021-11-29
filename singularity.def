@@ -21,7 +21,8 @@ MAINTAINER Arne Nix <arnenix@gmail.com>
                                checkout_code \
                                requests \
                                imageio \
-                               scikit-image
+                               scikit-image \
+                               vit-pytorch
 
     jupyter labextension install @axlair/jupyterlab_vim
 

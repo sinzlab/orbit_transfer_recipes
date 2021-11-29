@@ -7,5 +7,11 @@
     "nnvision": "b6cb6d1fe5813d03787c56404d70ca5774c76b54",
     "neuralpredictors": "a48e40cf45c07ecaef51e7d484b61eb5cec8eba0",
     "pytorch_warmup": "2c4e51eff93233686c8108a75ec7a96ee1c6ea30"
+  },
+  "mnist_loss_ablation": {
+    "bias_transfer": "77180c996d7c5ffdbdc508f3d43700836be3f61d",
+    "nntransfer": "ed3495dd8ba882f8bd4c1d1cd2cbe64092814389",
+    "nnplayground": "38b1ec387fc6c7263ea79ce67a6953047e341696",
+    "nnfabrik": "cff4d463affcf96984fee9a44b347e57d2d0034e",
   }
 }
