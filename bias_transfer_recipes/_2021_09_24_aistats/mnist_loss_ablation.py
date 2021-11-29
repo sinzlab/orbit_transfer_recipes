@@ -92,13 +92,14 @@ transfer_experiments[
 ] = TransferExperiment([teacher])
 
 ########## Orbit #############
-n = 1
+n = 3
 id_between_filters = True
 for (id_factor, inv_factor, equiv_factor, ce_factor) in product(
-    [1.0, 0.0],
-    [1.0, 0.0],
-    [1.0, 0.0],
-    [1.0, 0.0],
+    [10.0,  1.0
+     ],
+    [1.0],
+    [1.0],
+    [1.0],
 ):
     experiments = [teacher]
     experiments.append(
@@ -124,6 +125,7 @@ for (id_factor, inv_factor, equiv_factor, ce_factor) in product(
                     "inv_factor": inv_factor,
                     "ce_factor": ce_factor,
                     "equiv_factor": equiv_factor,
+                    "inv_for_all_layers": False,
                 },
                 comment="Transfer without fixed identity regularization",
             ),
