@@ -9,7 +9,7 @@
     "pytorch_warmup": "2c4e51eff93233686c8108a75ec7a96ee1c6ea30"
   },
   "mnist_loss_ablation": {
-    "bias_transfer": "c87cc157460c9a59f5ffc7adeec425ada7d7e15b",
+    "bias_transfer": "14f2ca667c69edf1f398bbe2b30b9960d3326fa3",
     "nntransfer": "264f2339265687b4c619239d5442a5fc0b791ba8",
     "nnplayground": "38b1ec387fc6c7263ea79ce67a6953047e341696",
     "nnfabrik": "cff4d463affcf96984fee9a44b347e57d2d0034e"

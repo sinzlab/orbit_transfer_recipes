@@ -93,9 +93,9 @@ transfer_experiments[
 ########## Orbit #############
 n = 3
 id_between_filters = True
-for (id_factor, inv_factor, equiv_factor, ce_factor) in product(
-    [10.0,  1.0, 0.0
-     ],
+for (first_layer_transform, id_factor, inv_factor, equiv_factor, ce_factor) in product(
+    [False, True],
+    [10.0, 1.0, 0.0],
     [1.0, 0.0],
     [1.0, 0.0],
     [1.0, 0.0],
@@ -111,7 +111,9 @@ for (id_factor, inv_factor, equiv_factor, ce_factor) in product(
                 main_objective="loss",
                 maximize=False,
                 deactivate_dropout=True,
-                student_model=TransferModel().to_dict(),
+                student_model=TransferModel(
+                    first_layer_transform=first_layer_transform,
+                ).to_dict(),
                 regularization={
                     "regularizer": "EquivarianceTransfer",
                     "gamma": 1.0,
@@ -135,7 +137,9 @@ for (id_factor, inv_factor, equiv_factor, ce_factor) in product(
     experiments.append(
         Experiment(
             dataset=BaselineDataset(),
-            model=TransferModel(),
+            model=TransferModel(
+                first_layer_transform=first_layer_transform,
+            ),
             trainer=TransferTrainer(
                 student_model=StudentModel(
                     get_intermediate_rep={
@@ -161,7 +165,7 @@ for (id_factor, inv_factor, equiv_factor, ce_factor) in product(
     transfer_experiments[
         Description(
             name=f"{teacher.trainer.comment} Equivariance Transfer "
-                 f"(id:{id_factor}, equiv:{equiv_factor}, inv:{inv_factor}, ce:{ce_factor})",
+            f"(first_layer_transform: {first_layer_transform}, id:{id_factor}, equiv:{equiv_factor}, inv:{inv_factor}, ce:{ce_factor})",
             seed=seed,
         )
     ] = TransferExperiment(experiments)
