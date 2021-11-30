@@ -15,7 +15,7 @@ class BaselineDataset(MNIST):
         self.load_kwargs(**kwargs)
         self.add_corrupted_test = True
         self.add_rotated_test = True
-        self.batch_size = 256
+        self.batch_size = 64
         super().__init__(**kwargs)
 
 
@@ -94,11 +94,11 @@ transfer_experiments[
 n = 3
 id_between_filters = True
 for (id_factor, inv_factor, equiv_factor, ce_factor) in product(
-    [10.0,  #1.0
+    [10.0,  1.0, 0.0
      ],
-    [1.0],
-    [1.0],
-    [1.0],
+    [1.0, 0.0],
+    [1.0, 0.0],
+    [1.0, 0.0],
 ):
     experiments = [teacher]
     experiments.append(

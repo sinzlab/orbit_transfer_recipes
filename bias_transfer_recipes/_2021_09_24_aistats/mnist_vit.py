@@ -143,16 +143,16 @@ for teacher in [
     ########## Orbit #############
     for n, id_between_filters, id_factor in product(
         [
-            1,  # 2, 3, 4, 5
+            3,  # 2, 3, 4, 5
         ],
         [
-            # True,
-            False
+            True,
+            # False
         ],
         [
             # 0.1,
-            1.0,
-            # 10.0,
+            # 1.0,
+            10.0,
             # 100.0
         ],
     ):
