@@ -95,7 +95,7 @@ transfer_experiments[
 n = 3
 id_between_filters = True
 for (id_factor, inv_factor, equiv_factor, ce_factor) in product(
-    [10.0,  1.0
+    [10.0,  #1.0
      ],
     [1.0],
     [1.0],
@@ -127,7 +127,7 @@ for (id_factor, inv_factor, equiv_factor, ce_factor) in product(
                     "equiv_factor": equiv_factor,
                     "inv_for_all_layers": False,
                 },
-                comment="Transfer without fixed identity regularization",
+                comment="Transfer without fixed identity regularization -> old commit",
             ),
             seed=seed,
         )
