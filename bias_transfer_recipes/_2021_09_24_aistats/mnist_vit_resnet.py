@@ -162,7 +162,10 @@ for teacher in [
                     maximize=False,
                     deactivate_dropout=True,
                     student_model=TransferModel(
-                        spatial_transformer=False, num_layers=6, vit_input=False
+                        spatial_transformer=False,
+                        num_layers=6,
+                        vit_input=False,
+                        first_layer_transform=True,
                     ).to_dict(),
                     regularization={
                         "regularizer": "EquivarianceTransfer",
@@ -184,7 +187,10 @@ for teacher in [
             Experiment(
                 dataset=BaselineDataset(),
                 model=TransferModel(
-                    spatial_transformer=False, num_layers=6, vit_input=True
+                    spatial_transformer=False,
+                    num_layers=6,
+                    vit_input=True,
+                    first_layer_transform=True,
                 ),
                 trainer=TransferTrainer(
                     student_model=StudentModel(
