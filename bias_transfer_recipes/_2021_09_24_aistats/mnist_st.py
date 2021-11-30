@@ -140,9 +140,7 @@ for teacher in [
     ] = TransferExperiment([teacher])
 
     ########## Orbit #############
-    for seed in [42,
-                 # 43, 44
-                 ]:
+    for seed in [42, 43, 44]:
         for G in [4, 8, 25]:
             experiments = [teacher]
             experiments.append(
@@ -177,8 +175,8 @@ for teacher in [
                             "inv_factor": 1.0,
                             "hinge_epsilon": 1.0,
                             "mse_dist": True,
-                            "ramp_up": {"equiv_factor":10, "inv_factor": 10},
-                            "visualize": False
+                            "ramp_up": {"equiv_factor": 10, "inv_factor": 10},
+                            "visualize": False,
                         },
                         comment="Transfer without fixed identity regularization",
                     ),
