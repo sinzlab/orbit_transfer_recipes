@@ -15,7 +15,7 @@ class BaselineDataset(MNIST):
         self.load_kwargs(**kwargs)
         self.add_corrupted_test = True
         self.add_rotated_test = True
-        self.batch_size = 64
+        self.batch_size = 256
         super().__init__(**kwargs)
 
 
@@ -49,9 +49,8 @@ class StudentModel(MLPModel):
 class BaselineTrainer(NoiseAugmentationMixin, Classification):
     def __init__(self, **kwargs):
         self.load_kwargs(**kwargs)
-        # self.max_iter = 20
-        self.max_iter = 40
-        # self.lr_warmup = 20
+        self.max_iter = 200
+        self.lr_warmup = 20
         self.patience = 20
         self.threshold: float = 0.0
         self.lr_decay_steps = 5  # Number of times the learning rate should be reduced before stopping the training.
@@ -69,7 +68,6 @@ class BaselineTrainer(NoiseAugmentationMixin, Classification):
 class TransferTrainer(TransferMixin, BaselineTrainer):
     def __init__(self, **kwargs):
         self.load_kwargs(**kwargs)
-        self.max_iter = 30
         super().__init__(**kwargs)
 
 
@@ -129,129 +127,103 @@ rotation_teacher_exp = Experiment(
 #     seed=seed,
 # )
 #
-G = 4
 for teacher in [
-    # teacher_exp,
+    teacher_exp,
     rotation_teacher_exp,
     # noise_teacher_exp,
 ]:
     rotation = teacher.model.type == "gcnn"
-    # transfer_experiments[
-    #     Description(
-    #         name=f"MNIST Experiment Teacher {teacher.trainer.comment}", seed=seed
-    #     )
-    # ] = TransferExperiment([teacher])
+    transfer_experiments[
+        Description(
+            name=f"MNIST Experiment Teacher {teacher.trainer.comment}", seed=seed
+        )
+    ] = TransferExperiment([teacher])
 
     ########## Orbit #############
-    for n, id_between_filters, id_factor in product(
-        [
-            1,  # 2, 3, 4, 5
-        ],
-        [
-            # True,
-            False
-        ],
-        [
-            # 0.1,
-            1.0,
-            # 10.0,
-            # 100.0
-        ],
-    ):
-        experiments = [teacher]
-        seed = 44
-        experiments.append(
-            Experiment(
-                dataset=BaselineDataset(),
-                model=teacher.model,
-                trainer=TransferTrainer(
-                    freeze_bn="all",
-                    switch_teacher=True,
-                    main_objective="loss",
-                    maximize=False,
-                    deactivate_dropout=True,
-                    student_model=TransferModel(
-                        # unet=True,
+    for seed in [42,
+                 # 43, 44
+                 ]:
+        for G in [4, 8, 25]:
+            experiments = [teacher]
+            experiments.append(
+                Experiment(
+                    dataset=BaselineDataset(),
+                    model=teacher.model,
+                    trainer=TransferTrainer(
+                        freeze_bn="all",
+                        switch_teacher=True,
+                        main_objective="loss",
+                        maximize=False,
+                        deactivate_dropout=True,
+                        student_model=TransferModel(
+                            spatial_transformer=True,
+                            only_translation=False,
+                            prevent_translation=False,
+                            include_channels=True,
+                            num_layers=4,
+                            group_size=G,
+                        ).to_dict(),
+                        regularization={
+                            "regularizer": "EquivarianceTransfer",
+                            "gamma": 1.0,
+                            "decay_gamma": False,
+                            "group_size": G,
+                            "learn_equiv": True,
+                            "id_between_filters": True,
+                            "id_between_transforms": False,
+                            "id_factor": 1.0,
+                            "ce_factor": 1.0,
+                            "equiv_factor": 1.0,
+                            "inv_factor": 1.0,
+                            "hinge_epsilon": 1.0,
+                            "mse_dist": True,
+                            "ramp_up": {"equiv_factor":10, "inv_factor": 10},
+                            "visualize": False
+                        },
+                        comment="Transfer without fixed identity regularization",
+                    ),
+                    seed=seed,
+                )
+            )
+
+            experiments.append(
+                Experiment(
+                    dataset=BaselineDataset(),
+                    model=TransferModel(
                         spatial_transformer=True,
                         only_translation=False,
                         prevent_translation=False,
                         include_channels=True,
-                        use_layer_transforms=True,
-                        # kernel_size=5,
-                        # spatial_kernel_size=[5, 5, 3, 1],
-                        # channel_kernel_size=[1, 2, 4, 5],
-                        # spatial_pooling=[[2, 2], [2, 2], [2, 2], [1] * 2],
-                        # channel_pooling=[[1] * 2, [1] * 2, [2, 2], [1, 1]],
-                        # latent_size=5,
                         num_layers=4,
                         group_size=G,
-                        patch_size=12,
-                    ).to_dict(),
-                    regularization={
-                        "regularizer": "EquivarianceTransfer",
-                        "gamma": 1.0,
-                        "decay_gamma": False,
-                        "group_size": G,
-                        "learn_equiv": True,
-                        "max_stacked_transform": n,
-                        "id_between_filters": True,
-                        "id_between_transforms": False,
-                        "id_factor": 1.0,
-                        "ce_factor": 1.0,
-                        "equiv_factor": 1.0,
-                        "inv_factor": 1.0,
-                        "hinge_epsilon": 1.5,
-                        "mse_dist": True,
-                        "ramp_up": {"inv": 10, "equiv": 10}
-                    },
-                    comment="Transfer without fixed identity regularization",
-                ),
-                seed=seed,
+                    ),
+                    trainer=TransferTrainer(
+                        student_model=StudentModel(
+                            get_intermediate_rep={
+                                "layers.1": "out.1",
+                                "layers.4": "out.2",
+                                "layers.7": "out.3",
+                                "layers.10": "out.4",
+                            }
+                        ).to_dict(),
+                        regularization={
+                            "regularizer": "EquivarianceTransfer",
+                            "gamma": 1.0,
+                            "decay_gamma": False,
+                            "group_size": G,
+                            "learn_equiv": False,
+                        },
+                    ),
+                    seed=seed,
+                )
             )
-        )
 
-        experiments.append(
-            Experiment(
-                dataset=BaselineDataset(),
-                model=TransferModel(
-                    spatial_transformer=True,
-                    only_translation=False,
-                    prevent_translation=False,
-                    include_channels=True,
-                    use_layer_transforms=True,
-                    patch_size=32,
-                    num_layers=4,
-                    group_size=G,
-                ),
-                trainer=TransferTrainer(
-                    student_model=StudentModel(
-                        get_intermediate_rep={
-                            "layers.1": "out.1",
-                            "layers.4": "out.2",
-                            "layers.7": "out.3",
-                            "layers.10": "out.4",
-                        }
-                    ).to_dict(),
-                    regularization={
-                        "regularizer": "EquivarianceTransfer",
-                        "gamma": 1.0,
-                        "decay_gamma": False,
-                        "group_size": G,
-                        "learn_equiv": False,
-                        "max_stacked_transform": n,
-                    },
-                ),
-                seed=seed,
-            )
-        )
-
-        transfer_experiments[
-            Description(
-                name=f"{teacher.trainer.comment} Equivariance Transfer (repititions:{n}, "
-                f"id_between_filters:{id_between_filters}, id_factor:{id_factor})",
-                seed=seed,
-            )
-        ] = TransferExperiment(experiments)
+            transfer_experiments[
+                Description(
+                    name=f"{teacher.trainer.comment} Equivariance Transfer G: {G}",
+                    seed=seed,
+                )
+            ] = TransferExperiment(experiments)
 #
 #     ##### KD ##########
 #     for softmax_temp in [0.1, 1.0, 2.0, 5.0, 10.0]:
@@ -352,18 +324,18 @@ for teacher in [
 #             )
 #         ] = TransferExperiment(experiments)
 #
-# experiments = []
-# experiments.append(
-#     Experiment(
-#         dataset=BaselineDataset(),
-#         model=StudentModel(),
-#         trainer=BaselineTrainer(),
-#         seed=seed,
-#     )
-# )
-# transfer_experiments[
-#     Description(name=f"MNIST Experiment Student", seed=seed)
-# ] = TransferExperiment(experiments)
+experiments = []
+experiments.append(
+    Experiment(
+        dataset=BaselineDataset(),
+        model=StudentModel(),
+        trainer=BaselineTrainer(),
+        seed=seed,
+    )
+)
+transfer_experiments[
+    Description(name=f"MNIST Experiment Student", seed=seed)
+] = TransferExperiment(experiments)
 #
 # experiments = []
 # experiments.append(
