@@ -30,10 +30,13 @@ class StudentModel(ClassificationModel):
         self.patch_size = 4
         self.num_classes = 10
         self.channels = 3
-        self.dim = 64
+        self.dim = 512
         self.depth = 6
         self.heads = 8
-        self.mlp_dim = 128
+        self.mlp_dim = 512
+        self.dropout = 0.1
+        self.emb_dropout = 0.1
+        self.orig_vit = True
         self.comment = f"CIFAR {self.type}"
         super().__init__(**kwargs)
 
@@ -198,12 +201,12 @@ for teacher in [
                 trainer=TransferTrainer(
                     student_model=StudentModel(
                         get_intermediate_rep={
-                            "transformer.layers.0.1.fn.net.4": "out.1",
-                            "transformer.layers.1.1.fn.net.4": "out.2",
-                            "transformer.layers.2.1.fn.net.4": "out.3",
-                            "transformer.layers.3.1.fn.net.4": "out.4",
-                            "transformer.layers.5.1.fn.net.4": "out.5",
-                            "mlp_head.2": "out.6",
+                            "transformer.layers.0.1.fn.net.3": "out.1",
+                            "transformer.layers.1.1.fn.net.3": "out.2",
+                            "transformer.layers.2.1.fn.net.3": "out.3",
+                            "transformer.layers.3.1.fn.net.3": "out.4",
+                            "transformer.layers.5.1.fn.net.3": "out.5",
+                            "mlp_head.1": "out.6",
                         }
                     ).to_dict(),
                     regularization={
@@ -325,7 +328,7 @@ for teacher in [
 #                 seed=seed,
 #             )
 #         ] = TransferExperiment(experiments)
-#
+
 experiments = []
 experiments.append(
     Experiment(
@@ -336,7 +339,7 @@ experiments.append(
     )
 )
 transfer_experiments[
-    Description(name=f"MNIST Experiment Student", seed=seed)
+    Description(name=f"CIFAR Experiment Student", seed=seed)
 ] = TransferExperiment(experiments)
 
 # experiments = []
