@@ -50,7 +50,6 @@ class BaselineTrainer(NoiseAugmentationMixin, Classification):
     def __init__(self, **kwargs):
         self.load_kwargs(**kwargs)
         self.max_iter = 400
-        # self.max_iter = 1
         self.lr_warmup = 20
         self.patience = 20
         self.threshold: float = 0.0
@@ -127,7 +126,7 @@ for (id_factor, inv_factor, equiv_factor, ce_factor) in product(
                     "equiv_factor": equiv_factor,
                     "inv_for_all_layers": False,
                 },
-                comment="Transfer without fixed identity regularization -> old commit",
+                comment="Transfer without fixed identity regularization -> new commit",
             ),
             seed=seed,
         )

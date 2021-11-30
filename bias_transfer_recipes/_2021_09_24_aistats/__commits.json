@@ -7,5 +7,29 @@
     "nnvision": "b6cb6d1fe5813d03787c56404d70ca5774c76b54",
     "neuralpredictors": "a48e40cf45c07ecaef51e7d484b61eb5cec8eba0",
     "pytorch_warmup": "2c4e51eff93233686c8108a75ec7a96ee1c6ea30"
+  },
+  "mnist_loss_ablation": {
+    "bias_transfer": "c87cc157460c9a59f5ffc7adeec425ada7d7e15b",
+    "nntransfer": "264f2339265687b4c619239d5442a5fc0b791ba8",
+    "nnplayground": "38b1ec387fc6c7263ea79ce67a6953047e341696",
+    "nnfabrik": "cff4d463affcf96984fee9a44b347e57d2d0034e"
+  },
+  "mnist_vit": {
+    "bias_transfer": "6fadf2b516f0f7eb13b1f7159fe13d563765e509",
+    "nntransfer": "264f2339265687b4c619239d5442a5fc0b791ba8",
+    "nnplayground": "38b1ec387fc6c7263ea79ce67a6953047e341696",
+    "nnfabrik": "cff4d463affcf96984fee9a44b347e57d2d0034e"
+  },
+  "mnist_vit_resnet": {
+    "bias_transfer": "6fadf2b516f0f7eb13b1f7159fe13d563765e509",
+    "nntransfer": "264f2339265687b4c619239d5442a5fc0b791ba8",
+    "nnplayground": "38b1ec387fc6c7263ea79ce67a6953047e341696",
+    "nnfabrik": "cff4d463affcf96984fee9a44b347e57d2d0034e"
+  },
+  "cifar_vit_resnet": {
+    "bias_transfer": "6fadf2b516f0f7eb13b1f7159fe13d563765e509",
+    "nntransfer": "264f2339265687b4c619239d5442a5fc0b791ba8",
+    "nnplayground": "38b1ec387fc6c7263ea79ce67a6953047e341696",
+    "nnfabrik": "cff4d463affcf96984fee9a44b347e57d2d0034e"
   }
 }
