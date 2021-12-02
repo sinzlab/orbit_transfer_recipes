@@ -9,8 +9,8 @@
     "pytorch_warmup": "2c4e51eff93233686c8108a75ec7a96ee1c6ea30"
   },
   "mnist_loss_ablation": {
-    "bias_transfer": "14f2ca667c69edf1f398bbe2b30b9960d3326fa3",
-    "nntransfer": "264f2339265687b4c619239d5442a5fc0b791ba8",
+    "bias_transfer": "28332b8939775c556d6639bf0e14e5f6fedc6c01",
+    "nntransfer": "8a6386c46ff4a56fb4c86bf28a16016152d8e965",
     "nnplayground": "38b1ec387fc6c7263ea79ce67a6953047e341696",
     "nnfabrik": "cff4d463affcf96984fee9a44b347e57d2d0034e"
   },

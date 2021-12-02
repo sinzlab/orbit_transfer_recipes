@@ -46,7 +46,7 @@ class StudentModel(MLPModel):
         super().__init__(**kwargs)
 
 
-class BaselineTrainer(NoiseAugmentationMixin, Classification):
+class BaselineTrainer(Classification):
     def __init__(self, **kwargs):
         self.load_kwargs(**kwargs)
         self.max_iter = 400
@@ -94,11 +94,11 @@ transfer_experiments[
 n = 3
 id_between_filters = True
 for (first_layer_transform, id_factor, inv_factor, equiv_factor, ce_factor) in product(
-    [False,
-     #   True
-     ],
-    [#10.0,
-     1.0, 0.0],
+    [
+        False,
+        True
+    ],
+    [10.0, 1.0, 0.0],
     [1.0, 0.0],
     [1.0, 0.0],
     [1.0, 0.0],
