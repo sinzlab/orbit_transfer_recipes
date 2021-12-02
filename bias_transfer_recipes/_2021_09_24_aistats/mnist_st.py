@@ -68,6 +68,9 @@ class BaselineTrainer(NoiseAugmentationMixin, Classification):
 class TransferTrainer(TransferMixin, BaselineTrainer):
     def __init__(self, **kwargs):
         self.load_kwargs(**kwargs)
+        self.max_iter = 50
+        self.lr_warmup = 0
+        self.patience = 20
         super().__init__(**kwargs)
 
 
@@ -128,20 +131,26 @@ rotation_teacher_exp = Experiment(
 # )
 #
 for teacher in [
-    teacher_exp,
+    # teacher_exp,
     rotation_teacher_exp,
     # noise_teacher_exp,
 ]:
     rotation = teacher.model.type == "gcnn"
-    transfer_experiments[
-        Description(
-            name=f"MNIST Experiment Teacher {teacher.trainer.comment}", seed=seed
-        )
-    ] = TransferExperiment([teacher])
+    # transfer_experiments[
+    #     Description(
+    #         name=f"MNIST Experiment Teacher {teacher.trainer.comment}", seed=seed
+    #     )
+    # ] = TransferExperiment([teacher])
 
     ########## Orbit #############
-    for seed in [42, 43, 44]:
-        for G in [4, 8, 25]:
+    for seed in [42,
+                  # 43,
+                 # 44
+                 ]:
+        for G in [4,
+                  # 8,
+                   # 25
+                  ]:
             experiments = [teacher]
             experiments.append(
                 Experiment(
@@ -160,6 +169,7 @@ for teacher in [
                             include_channels=True,
                             num_layers=4,
                             group_size=G,
+                            gaussian_transform=True
                         ).to_dict(),
                         regularization={
                             "regularizer": "EquivarianceTransfer",
@@ -171,12 +181,12 @@ for teacher in [
                             "id_between_transforms": False,
                             "id_factor": 1.0,
                             "ce_factor": 1.0,
-                            "equiv_factor": 1.0,
-                            "inv_factor": 1.0,
+                            "equiv_factor": 0.0,
+                            "inv_factor": 0.0,
                             "hinge_epsilon": 1.0,
                             "mse_dist": True,
-                            "ramp_up": {"equiv_factor": 10, "inv_factor": 10},
-                            "visualize": False,
+                            "ramp_up": {},
+                            "visualize": True,
                         },
                         comment="Transfer without fixed identity regularization",
                     ),
@@ -194,6 +204,7 @@ for teacher in [
                         include_channels=True,
                         num_layers=4,
                         group_size=G,
+                        gaussian_transform=True
                     ),
                     trainer=TransferTrainer(
                         student_model=StudentModel(
@@ -322,18 +333,18 @@ for teacher in [
 #             )
 #         ] = TransferExperiment(experiments)
 #
-experiments = []
-experiments.append(
-    Experiment(
-        dataset=BaselineDataset(),
-        model=StudentModel(),
-        trainer=BaselineTrainer(),
-        seed=seed,
-    )
-)
-transfer_experiments[
-    Description(name=f"MNIST Experiment Student", seed=seed)
-] = TransferExperiment(experiments)
+# experiments = []
+# experiments.append(
+#     Experiment(
+#         dataset=BaselineDataset(),
+#         model=StudentModel(),
+#         trainer=BaselineTrainer(),
+#         seed=seed,
+#     )
+# )
+# transfer_experiments[
+#     Description(name=f"MNIST Experiment Student", seed=seed)
+# ] = TransferExperiment(experiments)
 #
 # experiments = []
 # experiments.append(

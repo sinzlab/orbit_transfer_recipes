@@ -120,111 +120,125 @@ n = 3
 id_factor = 10.0
 id_between_filters = True
 for augmentation in [True, False]:
-    teacher = Experiment(
-        dataset=BaselineDataset(apply_augmentation=False, apply_normalization=False),
-        model=TeacherModel(
-            get_intermediate_rep={
-                "conv1": "out.1",
-                "layer1.1.conv2": "out.2",
-                "layer2.1.conv2": "out.3",
-                "layer3.1.conv2": "out.4",
-                "layer4.1.conv2": "out.5",
-                "fc": "out.6",
-            }
-        ),
-        trainer=BaselineTrainer(comment="Translation Invariant"),
-        seed=seed,
-    )
-    rotation = teacher.model.type == "gcnn"
-    transfer_experiments[
-        Description(name=f"MNIST Experiment Teacher {teacher.trainer.comment} (Augment:{augmentation})", seed=seed)
-    ] = TransferExperiment([teacher])
-    experiments = [teacher]
-    experiments.append(
-        Experiment(
-            dataset=BaselineDataset(apply_augmentation=augmentation, apply_normalization=augmentation),
-            model=teacher.model,
-            trainer=TransferTrainer(
-                freeze_bn="all",
-                switch_teacher=True,
-                main_objective="loss",
-                maximize=False,
-                deactivate_dropout=True,
-                student_model=TransferModel(
+    for norm in [True, False]:
+        teacher = Experiment(
+            dataset=BaselineDataset(
+                apply_augmentation=augmentation, apply_normalization=norm
+            ),
+            model=TeacherModel(
+                get_intermediate_rep={
+                    "conv1": "out.1",
+                    "layer1.1.conv2": "out.2",
+                    "layer2.1.conv2": "out.3",
+                    "layer3.1.conv2": "out.4",
+                    "layer4.1.conv2": "out.5",
+                    "fc": "out.6",
+                }
+            ),
+            trainer=BaselineTrainer(comment="Translation Invariant"),
+            seed=seed,
+        )
+        rotation = teacher.model.type == "gcnn"
+        transfer_experiments[
+            Description(
+                name=f"MNIST Experiment Teacher {teacher.trainer.comment} (Augment:{augmentation}, Normalization:{norm})",
+                seed=seed,
+            )
+        ] = TransferExperiment([teacher])
+        experiments = [teacher]
+        experiments.append(
+            Experiment(
+                dataset=BaselineDataset(
+                    apply_augmentation=augmentation, apply_normalization=norm
+                ),
+                model=teacher.model,
+                trainer=TransferTrainer(
+                    freeze_bn="all",
+                    switch_teacher=True,
+                    main_objective="loss",
+                    maximize=False,
+                    deactivate_dropout=True,
+                    student_model=TransferModel(
+                        spatial_transformer=False,
+                        num_layers=6,
+                        vit_input=False,
+                        first_layer_transform=True,
+                    ).to_dict(),
+                    regularization={
+                        "regularizer": "EquivarianceTransfer",
+                        "gamma": 1.0,
+                        "decay_gamma": False,
+                        "group_size": 25,
+                        "learn_equiv": True,
+                        "max_stacked_transform": n,
+                        "id_between_filters": id_between_filters,
+                        "id_factor": id_factor,
+                    },
+                    comment="Transfer without fixed identity regularization",
+                ),
+                seed=seed,
+            )
+        )
+
+        experiments.append(
+            Experiment(
+                dataset=BaselineDataset(
+                    apply_augmentation=augmentation, apply_normalization=norm
+                ),
+                model=TransferModel(
                     spatial_transformer=False,
                     num_layers=6,
-                    vit_input=False,
+                    vit_input=True,
                     first_layer_transform=True,
-                ).to_dict(),
-                regularization={
-                    "regularizer": "EquivarianceTransfer",
-                    "gamma": 1.0,
-                    "decay_gamma": False,
-                    "group_size": 25,
-                    "learn_equiv": True,
-                    "max_stacked_transform": n,
-                    "id_between_filters": id_between_filters,
-                    "id_factor": id_factor,
-                },
-                comment="Transfer without fixed identity regularization",
-            ),
-            seed=seed,
+                ),
+                trainer=TransferTrainer(
+                    student_model=StudentModel(
+                        get_intermediate_rep={
+                            "transformer.layers.0.1.fn.net.3": "out.1",
+                            "transformer.layers.1.1.fn.net.3": "out.2",
+                            "transformer.layers.2.1.fn.net.3": "out.3",
+                            "transformer.layers.3.1.fn.net.3": "out.4",
+                            "transformer.layers.5.1.fn.net.3": "out.5",
+                            "mlp_head.1": "out.6",
+                        }
+                    ).to_dict(),
+                    regularization={
+                        "regularizer": "EquivarianceTransfer",
+                        "gamma": 1.0,
+                        "decay_gamma": False,
+                        "group_size": 25,
+                        "learn_equiv": False,
+                        "max_stacked_transform": n,
+                    },
+                ),
+                seed=seed,
+            )
         )
-    )
 
-    experiments.append(
-        Experiment(
-            dataset=BaselineDataset(apply_augmentation=augmentation, apply_normalization=augmentation),
-            model=TransferModel(
-                spatial_transformer=False,
-                num_layers=6,
-                vit_input=True,
-                first_layer_transform=True,
-            ),
-            trainer=TransferTrainer(
-                student_model=StudentModel(
-                    get_intermediate_rep={
-                        "transformer.layers.0.1.fn.net.3": "out.1",
-                        "transformer.layers.1.1.fn.net.3": "out.2",
-                        "transformer.layers.2.1.fn.net.3": "out.3",
-                        "transformer.layers.3.1.fn.net.3": "out.4",
-                        "transformer.layers.5.1.fn.net.3": "out.5",
-                        "mlp_head.1": "out.6",
-                    }
-                ).to_dict(),
-                regularization={
-                    "regularizer": "EquivarianceTransfer",
-                    "gamma": 1.0,
-                    "decay_gamma": False,
-                    "group_size": 25,
-                    "learn_equiv": False,
-                    "max_stacked_transform": n,
-                },
-            ),
-            seed=seed,
-        )
-    )
+        transfer_experiments[
+            Description(
+                name=f"{teacher.trainer.comment} Equivariance Transfer (Augment: {augmentation}, Normalization: {norm}, "
+                     f"repititions:{n}, id_between_filters:{id_between_filters}, id_factor:{id_factor})",
+                seed=seed,
+            )
+        ] = TransferExperiment(experiments)
 
-    transfer_experiments[
-        Description(
-            name=f"{teacher.trainer.comment} Equivariance Transfer (Augment: {augmentation}, repititions:{n}, "
-            f"id_between_filters:{id_between_filters}, id_factor:{id_factor})",
-            seed=seed,
+        experiments = []
+        experiments.append(
+            Experiment(
+                dataset=BaselineDataset(
+                    apply_augmentation=augmentation, apply_normalization=norm
+                ),
+                model=StudentModel(),
+                trainer=BaselineTrainer(),
+                seed=seed,
+            )
         )
-    ] = TransferExperiment(experiments)
-
-    experiments = []
-    experiments.append(
-        Experiment(
-            dataset=BaselineDataset(apply_augmentation=augmentation, apply_normalization=augmentation),
-            model=StudentModel(),
-            trainer=BaselineTrainer(),
-            seed=seed,
-        )
-    )
-    transfer_experiments[
-        Description(name=f"CIFAR Experiment Student (Augment:{augmentation})", seed=seed)
-    ] = TransferExperiment(experiments)
+        transfer_experiments[
+            Description(
+                name=f"CIFAR Experiment Student (Augment:{augmentation}, Normalization:{norm})", seed=seed
+            )
+        ] = TransferExperiment(experiments)
 #
 #     ##### KD ##########
 #     for softmax_temp in [0.1, 1.0, 2.0, 5.0, 10.0]:
