@@ -46,7 +46,8 @@ class StudentModel(MLPModel):
         super().__init__(**kwargs)
 
 
-class BaselineTrainer(NoiseAugmentationMixin, Classification):
+
+class BaselineTrainer(Classification):
     def __init__(self, **kwargs):
         self.load_kwargs(**kwargs)
         self.max_iter = 200
@@ -131,7 +132,7 @@ rotation_teacher_exp = Experiment(
 # )
 #
 for teacher in [
-    # teacher_exp,
+    teacher_exp,
     rotation_teacher_exp,
     # noise_teacher_exp,
 ]:
@@ -149,7 +150,7 @@ for teacher in [
                  ]:
         for G in [4,
                   # 8,
-                   # 25
+                   25
                   ]:
             experiments = [teacher]
             experiments.append(
@@ -181,12 +182,12 @@ for teacher in [
                             "id_between_transforms": False,
                             "id_factor": 1.0,
                             "ce_factor": 1.0,
-                            "equiv_factor": 0.0,
-                            "inv_factor": 0.0,
+                            "equiv_factor": 1.0,
+                            "inv_factor": 1.0,
                             "hinge_epsilon": 1.0,
                             "mse_dist": True,
-                            "ramp_up": {},
-                            "visualize": True,
+                            "ramp_up": {"equiv_factor":10, "inv_factor":10},
+                            "visualize": False,
                         },
                         comment="Transfer without fixed identity regularization",
                     ),
