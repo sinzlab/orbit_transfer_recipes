@@ -69,9 +69,9 @@ class BaselineTrainer(Classification):
 class TransferTrainer(TransferMixin, BaselineTrainer):
     def __init__(self, **kwargs):
         self.load_kwargs(**kwargs)
-        self.max_iter = 50
-        self.lr_warmup = 0
-        self.patience = 20
+        # self.max_iter = 50
+        # self.lr_warmup = 0
+        # self.patience = 20
         super().__init__(**kwargs)
 
 
