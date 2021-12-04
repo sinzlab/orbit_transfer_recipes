@@ -130,7 +130,7 @@ for (first_layer_transform, id_factor, inv_factor, equiv_factor, ce_factor) in p
                     "ce_factor": ce_factor,
                     "equiv_factor": equiv_factor,
                     "inv_for_all_layers": False,
-                    "cut_input_grad": False,
+                    "cut_input_grad": True,
                 },
                 comment="Transfer without fixed identity regularization -> new commit",
             ),
