@@ -94,10 +94,7 @@ transfer_experiments[
 n = 3
 id_between_filters = True
 for (first_layer_transform, id_factor, inv_factor, equiv_factor, ce_factor) in product(
-    [
-        False,
-        # True
-    ],
+    [False, True],
     [10.0, 1.0, 0.0],
     [1.0, 0.0],
     [1.0, 0.0],
@@ -131,6 +128,7 @@ for (first_layer_transform, id_factor, inv_factor, equiv_factor, ce_factor) in p
                     "equiv_factor": equiv_factor,
                     "inv_for_all_layers": False,
                     "cut_input_grad": True,
+                    "clamp_input": True,
                 },
                 comment="Transfer without fixed identity regularization -> new commit",
             ),
@@ -160,6 +158,8 @@ for (first_layer_transform, id_factor, inv_factor, equiv_factor, ce_factor) in p
                     "group_size": 25,
                     "learn_equiv": False,
                     "max_stacked_transform": n,
+                    "cut_input_grad": True,
+                    "clamp_input": True,
                 },
             ),
             seed=seed,

@@ -9,7 +9,7 @@
     "pytorch_warmup": "2c4e51eff93233686c8108a75ec7a96ee1c6ea30"
   },
   "mnist_loss_ablation_cut": {
-    "bias_transfer": "15a00ecae2353d897e586bb3050346d0e934180b",
+    "bias_transfer": "7cf5258cdd87511ca8710dcaf04a934bbcb8e633",
     "nntransfer": "8a6386c46ff4a56fb4c86bf28a16016152d8e965",
     "nnplayground": "38b1ec387fc6c7263ea79ce67a6953047e341696",
     "nnfabrik": "cff4d463affcf96984fee9a44b347e57d2d0034e"
@@ -45,7 +45,7 @@
     "nnfabrik": "cff4d463affcf96984fee9a44b347e57d2d0034e"
   },
   "mnist_st_test": {
-    "bias_transfer": "15a00ecae2353d897e586bb3050346d0e934180b",
+    "bias_transfer": "7cf5258cdd87511ca8710dcaf04a934bbcb8e633",
     "nntransfer": "8a6386c46ff4a56fb4c86bf28a16016152d8e965",
     "nnplayground": "38b1ec387fc6c7263ea79ce67a6953047e341696",
     "nnfabrik": "cff4d463affcf96984fee9a44b347e57d2d0034e"
