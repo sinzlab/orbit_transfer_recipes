@@ -136,7 +136,7 @@ rotation_teacher_exp = Experiment(
 # )
 #
 for teacher in [
-    # teacher_exp,
+    teacher_exp,
     rotation_teacher_exp,
     # noise_teacher_exp,
 ]:
@@ -149,6 +149,7 @@ for teacher in [
 
     ########## Orbit #############
     for (
+        iterations,
         seed,
         G,
         clamp_input,
@@ -159,6 +160,7 @@ for teacher in [
         random_init,
         between_filters,
     ) in product(
+        [0, 200],
         [
             42,
             # 43,
@@ -167,10 +169,16 @@ for teacher in [
         [
             # 4,
             8,
-            #  25
+            25,
         ],
-        [True, False],
-        [True, False],
+        [
+            True
+            # , False
+        ],
+        [
+            True
+            # , False
+        ],
         [0.1, 0.2, 0.5],
         [1.0, 0.0],
         [1.0, 0.5, 1.5],
@@ -188,6 +196,7 @@ for teacher in [
                     main_objective="loss",
                     maximize=False,
                     deactivate_dropout=True,
+                    max_iter=iterations,
                     student_model=TransferModel(
                         spatial_transformer=True,
                         only_translation=False,
@@ -265,7 +274,8 @@ for teacher in [
             Description(
                 name=f"{teacher.trainer.comment} Equivariance Transfer G: {G}, "
                 f" gaussian_std:{gaussian_std}, ce_factor:{ce_factor}, hinge_epsilon:{hinge_epsilon}, "
-                f"random_init:{random_init}, between_filters:{between_filters}",
+                f"random_init:{random_init}, between_filters:{between_filters}"
+                f"clamp: {clamp_input}, cut_grad: {cut_input_grad}, iterations: {iterations}",
                 seed=seed,
             )
         ] = TransferExperiment(experiments)
