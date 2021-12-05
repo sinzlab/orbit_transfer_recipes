@@ -160,16 +160,17 @@ for teacher in [
         random_init,
         between_filters,
     ) in product(
-        [0, 200],
+        [0,
+         200],
         [
             42,
-            # 43,
+             # 43,
             # 44
         ],
         [
-            # 4,
+             4,
             8,
-            25,
+             25,
         ],
         [
             True
@@ -179,11 +180,22 @@ for teacher in [
             True
             # , False
         ],
-        [0.1, 0.2, 0.5],
-        [1.0, 0.0],
-        [1.0, 0.5, 1.5],
-        [True, False],
-        [True, False],
+        [0.0 #0.1, 0.2, 0.5
+         ],
+        [1.0,
+         0.0
+         ]
+        ,
+        [1.0,
+          0.5, 1.5
+         ],
+        [True,
+          # False
+         ],
+        [True,
+          False
+         ]
+        ,
     ):
         experiments = [teacher]
         experiments.append(
@@ -280,117 +292,124 @@ for teacher in [
             )
         ] = TransferExperiment(experiments)
 #
-#     ##### KD ##########
-#     for softmax_temp in [0.1, 1.0, 2.0, 5.0, 10.0]:
-#         experiments = [teacher]
-#         experiments.append(
-#             Experiment(
-#                 dataset=BaselineDataset(),
-#                 model=teacher.model,
-#                 trainer=TransferTrainer(
-#                     student_model=StudentModel(
-#                         get_intermediate_rep={"layers.10": "out.4"}
-#                     ).to_dict(),
-#                     regularization={
-#                         "regularizer": "KnowledgeDistillation",
-#                         "gamma": 1.0,
-#                         "decay_gamma": False,
-#                         "softmax_temp": softmax_temp,
-#                     },
-#                 ),
-#                 seed=seed,
-#             )
-#         )
-#
-#         transfer_experiments[
-#             Description(
-#                 name=f"{teacher.trainer.comment} Knowledge Distillation T={softmax_temp}",
-#                 seed=seed,
-#             )
-#         ] = TransferExperiment(experiments)
-#
-#     ##### RDL ##########
-#     for gamma, dist in product(
-#         [0.1, 0.5, 0.8,
-#          0.9],
-#         ["CKA",
-#          "corr"],
-#     ):
-#         experiments = [teacher]
-#         experiments.append(
-#             Experiment(
-#                 dataset=BaselineDataset(),
-#                 model=teacher.model,
-#                 trainer=TransferTrainer(
-#                     student_model=StudentModel(
-#                         get_intermediate_rep={
-#                             "layers.1": "out.1",
-#                             "layers.4": "out.2",
-#                             "layers.7": "out.3",
-#                             "layers.10": "out.4",
-#                         }
-#                     ).to_dict(),
-#                     regularization={
-#                         "regularizer": "RDL",
-#                         "gamma": gamma,
-#                         "decay_gamma": False,
-#                         "dist_measure": dist,
-#                     },
-#                 ),
-#                 seed=seed,
-#             )
-#         )
-#
-#         transfer_experiments[
-#             Description(
-#                 name=f"{teacher.trainer.comment} RDL ({dist}) gamma:{gamma}", seed=seed
-#             )
-#         ] = TransferExperiment(experiments)
-#
-#     #### Attention ##########
-#     for gamma in [0.1, 0.5, 0.8, 0.9]:
-#         experiments = [teacher]
-#         experiments.append(
-#             Experiment(
-#                 dataset=BaselineDataset(),
-#                 model=teacher.model,
-#                 trainer=TransferTrainer(
-#                     student_model=StudentModel(
-#                         get_intermediate_rep={
-#                             "layers.1": "out.1",
-#                             "layers.4": "out.2",
-#                             "layers.7": "out.3",
-#                         }
-#                     ).to_dict(),
-#                     regularization={
-#                         "regularizer": "AttentionTransfer",
-#                         "gamma": gamma,
-#                         "decay_alpha": False,
-#                     },
-#                 ),
-#                 seed=seed,
-#             )
-#         )
-#
-#         transfer_experiments[
-#             Description(
-#                 name=f"{teacher.trainer.comment} Attention Transfer gamma:{gamma}",
-#                 seed=seed,
-#             )
-#         ] = TransferExperiment(experiments)
-#
-# experiments = []
-# experiments.append(
-#     Experiment(
-#         dataset=BaselineDataset(),
-#         model=StudentModel(),
-#         trainer=BaselineTrainer(),
-#         seed=seed,
-#     )
-# )
-# transfer_experiments[
-#     Description(name=f"MNIST Experiment Student", seed=seed)
-# ] = TransferExperiment(experiments)
+    ##### KD ##########
+    for softmax_temp in [
+        # 0.1, 1.0, 2.0,
+        5.0,
+        # 10.0
+    ]:
+        experiments = [teacher]
+        experiments.append(
+            Experiment(
+                dataset=BaselineDataset(),
+                model=teacher.model,
+                trainer=TransferTrainer(
+                    student_model=StudentModel(
+                        get_intermediate_rep={"layers.10": "out.4"}
+                    ).to_dict(),
+                    regularization={
+                        "regularizer": "KnowledgeDistillation",
+                        "gamma": 1.0,
+                        "decay_gamma": False,
+                        "softmax_temp": softmax_temp,
+                    },
+                ),
+                seed=seed,
+            )
+        )
+
+        transfer_experiments[
+            Description(
+                name=f"{teacher.trainer.comment} Knowledge Distillation T={softmax_temp}",
+                seed=seed,
+            )
+        ] = TransferExperiment(experiments)
+
+    ##### RDL ##########
+    for gamma, dist in product(
+        [#0.1, 0.5,
+         0.8,
+         # 0.9
+        ],
+        [#"CKA",
+         "corr"],
+    ):
+        experiments = [teacher]
+        experiments.append(
+            Experiment(
+                dataset=BaselineDataset(),
+                model=teacher.model,
+                trainer=TransferTrainer(
+                    student_model=StudentModel(
+                        get_intermediate_rep={
+                            "layers.1": "out.1",
+                            "layers.4": "out.2",
+                            "layers.7": "out.3",
+                            "layers.10": "out.4",
+                        }
+                    ).to_dict(),
+                    regularization={
+                        "regularizer": "RDL",
+                        "gamma": gamma,
+                        "decay_gamma": False,
+                        "dist_measure": dist,
+                    },
+                ),
+                seed=seed,
+            )
+        )
+
+        transfer_experiments[
+            Description(
+                name=f"{teacher.trainer.comment} RDL ({dist}) gamma:{gamma}", seed=seed
+            )
+        ] = TransferExperiment(experiments)
+
+    #### Attention ##########
+    for gamma in [#0.1, 0.5, 0.8,
+                  0.9]:
+        experiments = [teacher]
+        experiments.append(
+            Experiment(
+                dataset=BaselineDataset(),
+                model=teacher.model,
+                trainer=TransferTrainer(
+                    student_model=StudentModel(
+                        get_intermediate_rep={
+                            "layers.1": "out.1",
+                            "layers.4": "out.2",
+                            "layers.7": "out.3",
+                        }
+                    ).to_dict(),
+                    regularization={
+                        "regularizer": "AttentionTransfer",
+                        "gamma": gamma,
+                        "decay_alpha": False,
+                    },
+                ),
+                seed=seed,
+            )
+        )
+
+        transfer_experiments[
+            Description(
+                name=f"{teacher.trainer.comment} Attention Transfer gamma:{gamma}",
+                seed=seed,
+            )
+        ] = TransferExperiment(experiments)
+
+experiments = []
+experiments.append(
+    Experiment(
+        dataset=BaselineDataset(),
+        model=StudentModel(),
+        trainer=BaselineTrainer(),
+        seed=seed,
+    )
+)
+transfer_experiments[
+    Description(name=f"MNIST Experiment Student", seed=seed)
+] = TransferExperiment(experiments)
 #
 # experiments = []
 # experiments.append(
