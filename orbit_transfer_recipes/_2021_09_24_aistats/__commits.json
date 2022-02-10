@@ -1,0 +1,9 @@
+{
+  "default": {
+    "orbit_transfer": "932f3862c4d4abd66b4978386dc2f9d3002bfcb9",
+    "nntransfer": "b76e94c4d8888661344cba5c37557792b6b73557",
+    "nnfabrik": "2aa0511b5f8729fb3144d8f69a8791442a22c6d2",
+    "neuralpredictors": "a48e40cf45c07ecaef51e7d484b61eb5cec8eba0",
+    "pytorch_warmup": "2c4e51eff93233686c8108a75ec7a96ee1c6ea30"
+  }
+}

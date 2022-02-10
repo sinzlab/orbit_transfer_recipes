@@ -8,8 +8,6 @@ MAINTAINER Arne Nix <arnenix@gmail.com>
     # install third-party libraries
     # needed for vim extension in jupyter and tex export in matplotlib:
     apt update && apt install -y \
-                          nodejs \
-                          npm \
                           texlive-latex-extra \
                           texlive-fonts-recommended \
                           texlive-base \
